@@ -3,6 +3,13 @@ import { BackIcon, CloseIcon, Mascot, ShareIcon, StarEmblem } from "./ui/Mascot.
 import { CHAPTERS, PETALS, QUESTIONS, getQ7Scene } from "./data/story.js";
 import userPurpleFluffy from "./assets/user-purple-fluffy.png";
 import loraWavingFluffy from "./assets/lora-waving-fluffy.png";
+import chapterOneToTwoVideo from "./assets/video/chapter-1-to-2.mp4";
+import chapterTwoToThreeVideo from "./assets/video/chapter-2-to-3.mp4";
+import chapterThreeToFourVideo from "./assets/video/chapter-3-to-4.mp4";
+import chapterFourToFiveVideo from "./assets/video/chapter-4-to-5.mp4";
+import chapterFiveToSixVideo from "./assets/video/chapter-5-to-6.mp4";
+import chapterSixToSevenVideo from "./assets/video/chapter-6-to-7.mp4";
+import chapterSevenEndingVideo from "./assets/video/chapter-7-ending.mp4";
 import {
   clearPrologueNarrationListener,
   getLoveraEncounterProgress,
@@ -62,10 +69,7 @@ export function Welcome({ hasProgress, onStart, onContinue }) {
 
       <header className="welcome-copy">
         <p className="welcome-kicker"><span /> Welcome to <span /></p>
-        <h1 className="welcome-title">
-          Soul Relationship
-          <span>Puzzle</span>
-        </h1>
+        <h1 className="welcome-title">Heart Islands</h1>
         <div className="welcome-divider" aria-hidden="true"><i>★</i></div>
         <p className="welcome-subtitle">
           A journey to understand<br />your <strong>true love</strong> personality.
@@ -102,58 +106,206 @@ export function Welcome({ hasProgress, onStart, onContinue }) {
   );
 }
 
+const CHAPTER_TRANSITION_VIDEOS = {
+  "1-2": {
+    src: chapterOneToTwoVideo,
+    label: "从心动岛前往回声洞穴的故事过场",
+    nextLabel: "进入第二章",
+  },
+  "2-3": {
+    src: chapterTwoToThreeVideo,
+    label: "从回声洞穴前往星果森林的故事过场",
+    nextLabel: "进入第三章",
+  },
+  "3-4": {
+    src: chapterThreeToFourVideo,
+    label: "从星果森林前往风暴峡谷的故事过场",
+    nextLabel: "进入第四章",
+  },
+  "4-5": {
+    src: chapterFourToFiveVideo,
+    label: "从风暴峡谷前往镜湖的故事过场",
+    nextLabel: "进入第五章",
+  },
+  "5-6": {
+    src: chapterFiveToSixVideo,
+    label: "从镜湖前往双生浮岛的故事过场",
+    nextLabel: "进入第六章",
+  },
+  "6-7": {
+    src: chapterSixToSevenVideo,
+    label: "从双生浮岛前往未来花园的故事过场",
+    nextLabel: "进入第七章",
+  },
+  "7-ending": {
+    src: chapterSevenEndingVideo,
+    label: "完成心之群岛旅程的结尾过场",
+    nextLabel: "查看我的关系画像",
+  },
+};
+
+export function ChapterTransitionVideo({ transitionKey = "1-2", onComplete }) {
+  const transition = CHAPTER_TRANSITION_VIDEOS[transitionKey] || CHAPTER_TRANSITION_VIDEOS["1-2"];
+  const videoRef = useRef(null);
+  const finishTimerRef = useRef(null);
+  const [needsTap, setNeedsTap] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return undefined;
+
+    video.muted = false;
+    video.volume = 1;
+    const startTimer = window.setTimeout(() => {
+      const playback = video.play();
+      playback?.catch(() => setNeedsTap(true));
+    }, 500);
+
+    return () => {
+      window.clearTimeout(startTimer);
+      window.clearTimeout(finishTimerRef.current);
+      video.pause();
+    };
+  }, []);
+
+  const finishPlayback = () => {
+    setPlaying(false);
+    finishTimerRef.current = window.setTimeout(onComplete, 500);
+  };
+
+  const startPlayback = async () => {
+    try {
+      await videoRef.current?.play();
+      setNeedsTap(false);
+    } catch {
+      setNeedsTap(true);
+    }
+  };
+
+  return (
+    <div className={`screen chapter-transition-screen ${playing ? "is-playing" : ""}`}>
+      <video
+        ref={videoRef}
+        className="chapter-transition-video"
+        src={transition.src}
+        playsInline
+        preload="auto"
+        disablePictureInPicture
+        controlsList="nodownload noplaybackrate noremoteplayback"
+        aria-label={transition.label}
+        onPlaying={() => {
+          setPlaying(true);
+          setNeedsTap(false);
+        }}
+        onEnded={finishPlayback}
+        onError={() => setFailed(true)}
+      />
+      <div className="chapter-transition-fade" aria-hidden="true" />
+      {needsTap && !failed && (
+        <button type="button" className="chapter-transition-play" onClick={startPlayback}>
+          <span aria-hidden="true">▶</span>
+          点击播放过场
+          <small>将播放原声</small>
+        </button>
+      )}
+      {failed && (
+        <div className="chapter-transition-error" role="alert">
+          <p>过场视频暂时无法播放</p>
+          <button type="button" onClick={onComplete}>{transition.nextLabel}</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const MAP_CHAPTER_MARKS = {
+  1: "♡",
+  2: "≋",
+  3: "✦",
+  4: "☂",
+  5: "◇",
+  6: "♥",
+  7: "♧",
+};
+
 export function JourneyMap({ answers, unlocked, onBack, onOpen, onPuzzle, onChat, onResult }) {
   const done = Object.keys(answers).length;
   return (
-    <div className="screen fade-in">
-      <Nav title="Your Journey" onBack={onBack} />
+    <div className="screen fade-in journey-map-screen">
+      <Nav
+        title="心之群岛"
+        onBack={onBack}
+        right={<span className="map-nav-count">{done}/14</span>}
+      />
+      <header className="map-intro">
+        <span>HEART ISLANDS</span>
+        <h1>Your Journey</h1>
+        <div aria-hidden="true"><i />♥<i /></div>
+        <p>每一块拼图，都是更了解自己的一步。</p>
+      </header>
       <div className="map-canvas">
-        <svg className="map-path" viewBox="0 0 320 560" preserveAspectRatio="none">
+        <svg className="map-path" viewBox="0 0 320 560" preserveAspectRatio="none" aria-hidden="true">
           <path
             d="M70 40 C 140 70, 230 90, 250 130 S 70 210, 70 250 S 260 330, 250 370 S 80 450, 90 490 S 180 530, 150 540"
             fill="none"
-            stroke="rgba(232,137,74,0.45)"
-            strokeWidth="2"
-            strokeDasharray="6 8"
+            pathLength="1"
+            className="map-path-base"
+          />
+          <path
+            d="M70 40 C 140 70, 230 90, 250 130 S 70 210, 70 250 S 260 330, 250 370 S 80 450, 90 490 S 180 530, 150 540"
+            fill="none"
+            pathLength="1"
+            className="map-path-progress"
+            style={{ strokeDashoffset: 1 - (done / 14) }}
           />
         </svg>
         {CHAPTERS.map((ch, idx) => {
           const complete = ch.questions.every((q) => answers[`Q${q}`]);
           const open = ch.id <= unlocked;
+          const current = open && !complete && idx === unlocked - 1;
           return (
             <button
               key={ch.id}
-              className={`island ${open ? "active" : "locked"}`}
+              type="button"
+              className={`island map-island-${ch.id} ${open ? "active" : "locked"} ${complete ? "complete" : ""} ${current ? "current" : ""}`}
               style={ch.mapPos}
               onClick={() => open && onOpen(ch.id)}
+              disabled={!open}
             >
-              <div className="no">
-                {String(ch.id).padStart(2, "0")} {complete ? "✦" : ""}
+              <span className="map-island-mark" aria-hidden="true">{MAP_CHAPTER_MARKS[ch.id]}</span>
+              <div className="map-island-copy">
+                <div className="no">
+                  {String(ch.id).padStart(2, "0")} {complete ? "✦" : ""}
+                </div>
+                <h3>{ch.nameEn}</h3>
+                <p>{ch.nameZh}</p>
               </div>
-              <h3>{ch.nameEn}</h3>
-              <p>{ch.nameZh}</p>
-              {!open && <span className="lock">🔒</span>}
+              {!open && <span className="lock" aria-hidden="true">⌁</span>}
               {open && !complete && idx === unlocked - 1 && <span className="lock">→</span>}
             </button>
           );
         })}
+        <div className="map-lovera-companion" aria-hidden="true">
+          <span />
+          <Mascot mood="happy" size={54} />
+        </div>
       </div>
       <div className="map-footer">
-        <p className="sub" style={{ textAlign: "center", fontSize: 13 }}>
-          ✦ Collect more pieces to reveal yourself
-        </p>
-        <div className="progress-row" style={{ marginTop: 8 }}>
-          <div className="bar">
-            <span style={{ width: `${(done / 14) * 100}%` }} />
-          </div>
-          <span style={{ color: "var(--orange)" }}>{done}/14</span>
+        <div className="map-progress-label">
+          <span>✦ 收集更多拼图，看见更完整的自己</span>
+          <strong>{done}<small>/14</small></strong>
+        </div>
+        <div className="map-progress-bar">
+          <span style={{ width: `${(done / 14) * 100}%` }} />
         </div>
         <div className="row-btns">
           <button className="mini" onClick={onPuzzle}>
-            拼图
+            <span aria-hidden="true">✦</span> 拼图
           </button>
           <button className="mini" onClick={onChat}>
-            找 Lovera
+            <span aria-hidden="true">♥</span> 找 Lovera
           </button>
           {done === 14 && onResult && (
             <button className="mini" onClick={onResult}>
@@ -776,9 +928,7 @@ function Q1CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
               ))}
             </div>
           </div>
-        ) : (
-          <div className="waiting-response q1-watching-note"><span /> 故事正在发生，请看着这颗星星……</div>
-        )}
+        ) : null}
       </div>
       <div className="progress-row question-progress">
         <div className="bar"><span style={{ width: "50%" }} /></div>
@@ -1024,14 +1174,21 @@ function Q2CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
               </>
             )}
             {audioNeedsTap && (
-              <button type="button" className="question-listen-prompt" onClick={retryAudio}>
-                <span aria-hidden="true">♪</span> 点一下，继续听 Lovera 说话
-              </button>
+              <div className="q2-caption-actions">
+                <button type="button" className="question-listen-prompt" onClick={retryAudio}>
+                  <span aria-hidden="true">♪</span> 点一下，继续听 Lovera 说话
+                </button>
+                {phase !== "question" && phase !== "branch" && (
+                  <button type="button" className="question-narration-skip" onClick={skipNarration}>跳过</button>
+                )}
+              </div>
+            )}
+            {!audioNeedsTap && phase !== "question" && phase !== "branch" && (
+              <div className="q2-caption-actions">
+                <button type="button" className="question-narration-skip" onClick={skipNarration}>跳过</button>
+              </div>
             )}
           </div>
-          {phase !== "question" && phase !== "branch" && (
-            <button type="button" className="question-narration-skip" onClick={skipNarration}>跳过</button>
-          )}
         </section>
 
         {phase === "question" ? (
@@ -1177,7 +1334,11 @@ function Q3CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
   };
 
   return (
-    <div className="screen fade-in question-screen cave-question-screen q3-cinematic-screen">
+    <div
+      className={`screen fade-in question-screen cave-question-screen q3-cinematic-screen phase-${phase}`}
+      style={{ "--cave-story-time": `${narrationProgress * -1}s` }}
+    >
+      <div className="q3-page-darkness" aria-hidden="true" />
       <Nav title={`${chapter.no} ${chapter.nameEn}`} onClose={closeQuestion} />
       <div className="scroll question-scroll cave-cinematic-scroll">
         <section
@@ -1195,7 +1356,6 @@ function Q3CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
             <div className="cave-depth-vignette" />
             <div className="cave-crystal-glow crystal-left" />
             <div className="cave-crystal-glow crystal-right" />
-            <div className="cave-darkness-curtain" />
             <div className="cave-user-character"><img src={userPurpleFluffy} alt="" draggable="false" /></div>
             <div className="cave-lovera-character"><Mascot mood="worry" size={98} /></div>
             <div className="cave-voice-waves"><i /><i /><i /></div>
@@ -1213,9 +1373,13 @@ function Q3CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
                 <p>“{phase === "question" ? loveraLine : loveraLine.slice(0, loveraChars)}”</p>
               </>
             )}
-            {audioNeedsTap && <button type="button" className="question-listen-prompt" onClick={retryAudio}><span>♪</span> 点一下，听见黑暗里的声音</button>}
+            {(audioNeedsTap || phase !== "question") && (
+              <div className="cave-caption-actions">
+                {audioNeedsTap && <button type="button" className="question-listen-prompt" onClick={retryAudio}><span>♪</span> 点一下，听见黑暗里的声音</button>}
+                {phase !== "question" && <button type="button" className="question-narration-skip" onClick={skipNarration}>跳过</button>}
+              </div>
+            )}
           </div>
-          {phase !== "question" && <button type="button" className="question-narration-skip" onClick={skipNarration}>跳过</button>}
         </section>
 
         {phase === "question" ? (
@@ -1229,7 +1393,7 @@ function Q3CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
               ))}
             </div>
           </div>
-        ) : <div className="waiting-response cave-watching-note"><span /> 光正在消失，请听着 Lovera 的方向……</div>}
+        ) : null}
       </div>
       <div className="progress-row question-progress"><div className="bar"><span style={{ width: "50%" }} /></div><span>1/2</span></div>
     </div>
@@ -1418,9 +1582,13 @@ function Q4CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
             ) : (
               <><div className="cave-caption-meta"><span>✦ Lovera</span><i>有些慌张地说</i></div><p>“{phase === "question" ? apologyLine : apologyLine.slice(0, apologyChars)}”</p></>
             )}
-            {audioNeedsTap && <button type="button" className="question-listen-prompt" onClick={retryAudio}><span>♪</span> 点一下，继续听这段故事</button>}
+            {(audioNeedsTap || phase !== "question") && (
+              <div className="cave-caption-actions">
+                {audioNeedsTap && <button type="button" className="question-listen-prompt" onClick={retryAudio}><span>♪</span> 点一下，继续听这段故事</button>}
+                {phase !== "question" && <button type="button" className="question-narration-skip" onClick={skipNarration}>跳过</button>}
+              </div>
+            )}
           </div>
-          {phase !== "question" && <button type="button" className="question-narration-skip" onClick={skipNarration}>跳过</button>}
         </section>
 
         {phase === "question" ? (
@@ -1434,7 +1602,7 @@ function Q4CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
               ))}
             </div>
           </div>
-        ) : <div className="waiting-response cave-watching-note"><span /> {phase === "silence" ? "请在这段安静里等她回来……" : "洞穴里的回声正在改变……"}</div>}
+        ) : null}
       </div>
       <div className="progress-row question-progress"><div className="bar"><span style={{ width: "100%" }} /></div><span>2/2</span></div>
     </div>
@@ -1545,9 +1713,13 @@ function Q5CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
             ) : (
               <><div className="resource-caption-meta"><span>旁白</span><i>背包里亮起最后一点光</i></div><p>你的背包里只剩下一点魔法能量。</p></>
             )}
-            {audioNeedsTap && <button type="button" className="question-listen-prompt" onClick={retryAudio}><span>♪</span> 点一下，继续听这段故事</button>}
+            {(audioNeedsTap || phase !== "question") && (
+              <div className="resource-caption-actions">
+                {audioNeedsTap && <button type="button" className="question-listen-prompt" onClick={retryAudio}><span>♪</span> 点一下，继续听这段故事</button>}
+                {phase !== "question" && <button type="button" className="question-narration-skip" onClick={skipNarration}>跳过</button>}
+              </div>
+            )}
           </div>
-          {phase !== "question" && <button type="button" className="question-narration-skip" onClick={skipNarration}>跳过</button>}
         </section>
 
         {phase === "question" ? (
@@ -1559,7 +1731,7 @@ function Q5CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
               </button>
             ))}</div>
           </div>
-        ) : <div className="waiting-response resource-watching-note"><span /> 星星灯的光正一点点变弱……</div>}
+        ) : null}
       </div>
       <div className="progress-row question-progress"><div className="bar"><span style={{ width: "33.33%" }} /></div><span>1/3</span></div>
     </div>
@@ -1574,6 +1746,27 @@ function Q6CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
     "漂亮的飞行云朵：8 颗星币。可以让接下来的旅程很舒服。",
     "两盏小灯：4 颗星币。不漂亮，但之后也许有用。",
     "什么都不买：0 颗星币。把星币留给之后。",
+  ];
+  const vaultCaptions = [
+    { text: "你们来到一座装满星砂的宝库。", start: 0.62, end: 3.46 },
+    { text: "守门怪告诉你们：", start: 3.9, end: 5.22 },
+    { text: "你们只有 10 颗星币，", start: 5.58, end: 7.38 },
+    { text: "但前面还有很长的路。", start: 7.72, end: 9.76 },
+  ];
+  const goodsCaptionSegments = [
+    [
+      { text: "漂亮的飞行云朵：8 颗星币。", start: 0.58, end: 2.42 },
+      { text: "可以让接下来的旅程很舒服。", start: 2.9, end: 5.62 },
+    ],
+    [
+      { text: "两盏小灯：4 颗星币。", start: 5.98, end: 8.06 },
+      { text: "不漂亮，但之后也许有用。", start: 8.52, end: 10.74 },
+    ],
+    [
+      { text: "什么都不买：", start: 11.1, end: 11.56 },
+      { text: "0 颗星币。", start: 11.88, end: 13.16 },
+      { text: "把星币留给之后。", start: 13.84, end: 15.98 },
+    ],
   ];
   const [phase, setPhase] = useState("vault");
   const [phaseProgress, setPhaseProgress] = useState(0);
@@ -1596,7 +1789,10 @@ function Q6CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
     const finish = () => {
       if (disposed) return;
       setPhaseProgress(1);
-      transitionTimer = window.setTimeout(() => setPhase(config.next), config.pause);
+      transitionTimer = window.setTimeout(() => {
+        setPhaseProgress(0);
+        setPhase(config.next);
+      }, config.pause);
     };
 
     setPhaseProgress(0);
@@ -1642,8 +1838,31 @@ function Q6CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
     setPhaseProgress(1);
     setPhase("question");
   };
-  const activeGood = phaseProgress < 0.36 ? 0 : phaseProgress < 0.72 ? 1 : 2;
-  const loveraChars = Math.ceil(loveraLine.length * phaseProgress);
+  const revealTimedLine = (line, currentTime, startTime, endTime) => {
+    const progress = Math.max(0, Math.min(1, (currentTime - startTime) / (endTime - startTime)));
+    return line.slice(0, Math.ceil(line.length * progress));
+  };
+  const revealTimedSegments = (segments, currentTime) => segments.reduce((text, segment) => {
+    if (currentTime <= segment.start) return text;
+    if (currentTime >= segment.end) return text + segment.text;
+    return text + revealTimedLine(segment.text, currentTime, segment.start, segment.end);
+  }, "");
+  const vaultTime = phaseProgress * 9.783;
+  const vaultLineIndex = vaultTime < 3.9 ? 0 : vaultTime < 5.58 ? 1 : vaultTime < 7.72 ? 2 : 3;
+  const activeVaultCaption = vaultCaptions[vaultLineIndex];
+  const displayedVaultLine = revealTimedLine(
+    activeVaultCaption.text,
+    vaultTime,
+    activeVaultCaption.start,
+    activeVaultCaption.end,
+  );
+  const goodsTime = phaseProgress * 16.123;
+  const activeGood = goodsTime < 5.98 ? 0 : goodsTime < 11.1 ? 1 : 2;
+  const displayedGoodsLine = revealTimedSegments(goodsCaptionSegments[activeGood], goodsTime);
+  const loveraTime = phaseProgress * 3.943;
+  const displayedLoveraLine = phase === "question"
+    ? loveraLine
+    : revealTimedLine(loveraLine, loveraTime, 2.08, 3.7);
 
   return (
     <div className="screen fade-in question-screen resource-question-screen q6-cinematic-screen">
@@ -1658,24 +1877,24 @@ function Q6CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
           </div>
           <div className="resource-scene q6-scene" aria-hidden="true">
             <div className="q6-gold-shimmer">{Array.from({ length: 12 }, (_, index) => <i key={index} />)}</div>
-            <div className="q6-coin-wallet"><span>★</span><strong>10</strong><small>星币</small></div>
-            <div className={`q6-good-tag good-cloud ${phase === "goods" && activeGood === 0 ? "active" : ""}`}><span>☁</span><strong>8</strong><small>星币</small></div>
-            <div className={`q6-good-tag good-lamps ${phase === "goods" && activeGood === 1 ? "active" : ""}`}><span>♢♢</span><strong>4</strong><small>星币</small></div>
-            <div className={`q6-good-tag good-save ${phase === "goods" && activeGood === 2 ? "active" : ""}`}><span>☆</span><strong>0</strong><small>星币</small></div>
             <div className="q6-user-character"><img src={userPurpleFluffy} alt="" draggable="false" /></div>
             <div className="q6-lovera-character"><Mascot mood="idle" size={96} /></div>
           </div>
-          <div className={`resource-caption ${phase === "lovera" ? "lovera-caption" : "narrator-caption"}`} aria-live="polite">
+          <div className={`resource-caption ${phase === "lovera" || phase === "question" ? "lovera-caption" : "narrator-caption"}`} aria-live="polite">
             {phase === "vault" ? (
-              <><div className="resource-caption-meta"><span>旁白</span><i>你们只有 10 颗星币</i></div><p>{phaseProgress < 0.48 ? "你们来到一座装满星砂的宝库。" : "守门怪告诉你们：前面还有很长的路。"}</p></>
+              <><div className="resource-caption-meta"><span>旁白</span><i>继续前行</i></div><p key={vaultLineIndex}>{displayedVaultLine}{displayedVaultLine.length < activeVaultCaption.text.length && <span className="narration-cursor" />}</p></>
             ) : phase === "goods" ? (
-              <><div className="resource-caption-meta"><span>旁白</span><i>{activeGood + 1} / 3</i></div><p key={activeGood}>{goodsLines[activeGood]}</p></>
+              <><div className="resource-caption-meta"><span>旁白</span><i>三种不同的选择</i></div><p key={activeGood}>{displayedGoodsLine}{displayedGoodsLine.length < goodsLines[activeGood].length && <span className="narration-cursor" />}</p></>
             ) : (
-              <><div className="resource-caption-meta"><span>✦ Lovera</span><i>看着三个选择问你</i></div><p>“{phase === "question" ? loveraLine : loveraLine.slice(0, loveraChars)}”</p></>
+              <><div className="resource-caption-meta"><span>✦ Lovera</span><i>认真地问你</i></div><p>“{displayedLoveraLine}{phase !== "question" && displayedLoveraLine.length < loveraLine.length && <span className="narration-cursor" />}”</p></>
             )}
-            {audioNeedsTap && <button type="button" className="question-listen-prompt" onClick={retryAudio}><span>♪</span> 点一下，继续听这段故事</button>}
+            {(audioNeedsTap || phase !== "question") && (
+              <div className="resource-caption-actions">
+                {audioNeedsTap && <button type="button" className="question-listen-prompt" onClick={retryAudio}><span>♪</span> 点一下，继续听这段故事</button>}
+                {phase !== "question" && <button type="button" className="question-narration-skip" onClick={skipNarration}>跳过</button>}
+              </div>
+            )}
           </div>
-          {phase !== "question" && <button type="button" className="question-narration-skip" onClick={skipNarration}>跳过</button>}
         </section>
 
         {phase === "question" ? (
@@ -1687,7 +1906,7 @@ function Q6CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
               </button>
             ))}</div>
           </div>
-        ) : <div className="waiting-response resource-watching-note"><span /> 星砂映亮了三个不同的选择……</div>}
+        ) : null}
       </div>
       <div className="progress-row question-progress"><div className="bar"><span style={{ width: "66.66%" }} /></div><span>2/3</span></div>
     </div>
@@ -1781,7 +2000,7 @@ function Q8CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
     ? "相信我，右边一定可以过去。"
     : "你刚刚如果走快一点，我们已经过去了。";
   const loveraChars = Math.ceil(loveraLine.length * phaseProgress);
-  const isLoveraSpeaking = phase === "insist" || phase === "blame";
+  const isLoveraSpeaking = phase === "insist" || phase === "blame" || phase === "question";
 
   return (
     <div className="screen fade-in question-screen storm-question-screen q8-cinematic-screen">
@@ -1817,9 +2036,13 @@ function Q8CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
             ) : (
               <><div className="storm-caption-meta"><span>✦ Lovera</span><i>{phase === "blame" ? "有点烦躁地说" : "指向右边的路"}</i></div><p>“{phase === "question" ? loveraLine : loveraLine.slice(0, loveraChars)}”</p></>
             )}
-            {audioNeedsTap && <button type="button" className="question-listen-prompt" onClick={retryAudio}><span>♪</span> 点一下，继续听这段故事</button>}
+            {(audioNeedsTap || phase !== "question") && (
+              <div className="storm-caption-actions">
+                {audioNeedsTap && <button type="button" className="question-listen-prompt" onClick={retryAudio}><span>♪</span> 点一下，继续听这段故事</button>}
+                {phase !== "question" && <button type="button" className="question-narration-skip" onClick={skipNarration}>跳过</button>}
+              </div>
+            )}
           </div>
-          {phase !== "question" && <button type="button" className="question-narration-skip" onClick={skipNarration}>跳过</button>}
         </section>
 
         {phase === "question" ? (
@@ -1831,7 +2054,7 @@ function Q8CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
               </button>
             ))}</div>
           </div>
-        ) : <div className="waiting-response storm-watching-note"><span /> {phase === "blown" ? "风把你们推回了原点……" : "这一次分歧正在风里发生……"}</div>}
+        ) : null}
       </div>
       <div className="progress-row question-progress"><div className="bar"><span style={{ width: "50%" }} /></div><span>1/2</span></div>
     </div>
@@ -1971,9 +2194,13 @@ function Q9CinematicQuestion({ answers, onClose, onChoose, soundOn, onToggleSoun
               <i>{phase === "branch" ? activeBeat.meta : "三条路重新汇流"}</i>
             </div>
             <p>{currentSpeaker === "Lovera" ? "“" : ""}{showFullLine ? currentLine : currentLine.slice(0, visibleChars)}{currentSpeaker === "Lovera" ? "”" : ""}</p>
-            {audioNeedsTap && <button type="button" className="question-listen-prompt" onClick={retryAudio}><span>♪</span> 点一下，继续听这段故事</button>}
+            {(audioNeedsTap || phase !== "question") && (
+              <div className="storm-caption-actions">
+                {audioNeedsTap && <button type="button" className="question-listen-prompt" onClick={retryAudio}><span>♪</span> 点一下，继续听这段故事</button>}
+                {phase !== "question" && <button type="button" className="question-narration-skip" onClick={skipNarration}>跳过</button>}
+              </div>
+            )}
           </div>
-          {phase !== "question" && <button type="button" className="question-narration-skip" onClick={skipNarration}>跳过</button>}
         </section>
 
         {phase === "question" ? (
@@ -1985,7 +2212,7 @@ function Q9CinematicQuestion({ answers, onClose, onChoose, soundOn, onToggleSoun
               </button>
             ))}</div>
           </div>
-        ) : <div className="waiting-response storm-watching-note"><span /> {branch === "A" ? "一句承认，让两个人重新站到同一边……" : branch === "B" ? "安静没有结束关系，它在等一次回来……" : "走开的脚步停住了，关系仍在等待回应……"}</div>}
+        ) : null}
       </div>
       <div className="progress-row question-progress"><div className="bar"><span style={{ width: "100%" }} /></div><span>2/2</span></div>
     </div>
@@ -2124,9 +2351,13 @@ function Q10CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
             ) : (
               <><div className="mirror-caption-meta"><span>镜湖</span><i>必须打碎其中一个</i></div><p>哪一种关系，是你最不能接受的？</p></>
             )}
-            {audioNeedsTap && <button type="button" className="question-listen-prompt" onClick={retryAudio}><span>♪</span> 点一下，继续听这段故事</button>}
+            {(audioNeedsTap || (phase !== "question" && phase !== "shatter")) && (
+              <div className="mirror-caption-actions">
+                {audioNeedsTap && <button type="button" className="question-listen-prompt" onClick={retryAudio}><span>♪</span> 点一下，继续听这段故事</button>}
+                {phase !== "question" && phase !== "shatter" && <button type="button" className="question-narration-skip" onClick={skipNarration}>跳过</button>}
+              </div>
+            )}
           </div>
-          {phase !== "question" && phase !== "shatter" && <button type="button" className="question-narration-skip" onClick={skipNarration}>跳过</button>}
         </section>
 
         {phase === "question" ? (
@@ -2138,7 +2369,7 @@ function Q10CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
               </button>
             ))}</div>
           </div>
-        ) : <div className="waiting-response mirror-watching-note"><span /> {phase === "shatter" ? "一面未来正在碎成星光……" : "三段未来，正从湖底浮上来……"}</div>}
+        ) : null}
       </div>
       <div className="progress-row question-progress"><div className="bar"><span style={{ width: "50%" }} /></div><span>1/2</span></div>
     </div>
@@ -2238,9 +2469,13 @@ function Q11CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
             ) : (
               <><div className="mirror-caption-meta"><span>✦ Lovera</span><i>忽然认真地看向你</i></div><p>“{phase === "question" ? q.question : q.question.slice(0, visibleChars)}”</p></>
             )}
-            {audioNeedsTap && <button type="button" className="question-listen-prompt" onClick={retryAudio}><span>♪</span> 点一下，继续听这段故事</button>}
+            {(audioNeedsTap || phase !== "question") && (
+              <div className="mirror-caption-actions">
+                {audioNeedsTap && <button type="button" className="question-listen-prompt" onClick={retryAudio}><span>♪</span> 点一下，继续听这段故事</button>}
+                {phase !== "question" && <button type="button" className="question-narration-skip" onClick={skipNarration}>跳过</button>}
+              </div>
+            )}
           </div>
-          {phase !== "question" && <button type="button" className="question-narration-skip" onClick={skipNarration}>跳过</button>}
         </section>
 
         {phase === "question" ? (
@@ -2252,7 +2487,7 @@ function Q11CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
               </button>
             ))}</div>
           </div>
-        ) : <div className="waiting-response mirror-watching-note moon-watching-note"><span /> 月光把她的问题放得很轻……</div>}
+        ) : null}
       </div>
       <div className="progress-row question-progress"><div className="bar"><span style={{ width: "100%" }} /></div><span>2/2</span></div>
     </div>
@@ -2403,9 +2638,13 @@ function PromiseCinematicQuestion({ qid, onClose, onChoose, soundOn, onToggleSou
           <div className={`promise-caption ${isLovera ? "lovera-caption" : "narrator-caption"}`} aria-live="polite">
             <div className="promise-caption-meta"><span>{isLovera ? "✦ Lovera" : "旁白"}</span><i>{activeBeat.meta}</i></div>
             <p key={`${qid}-${beatIndex}`}>{isLovera ? "“" : ""}{questionReady ? line : line.slice(0, visibleChars)}{isLovera ? "”" : ""}</p>
-            {audioNeedsTap && <button type="button" className="question-listen-prompt" onClick={retryAudio}><span>♪</span> 点一下，继续听这段故事</button>}
+            {(audioNeedsTap || !questionReady) && (
+              <div className="promise-caption-actions">
+                {audioNeedsTap && <button type="button" className="question-listen-prompt" onClick={retryAudio}><span>♪</span> 点一下，继续听这段故事</button>}
+                {!questionReady && <button type="button" className="question-narration-skip" onClick={skipNarration}>跳过</button>}
+              </div>
+            )}
           </div>
-          {!questionReady && <button type="button" className="question-narration-skip" onClick={skipNarration}>跳过</button>}
         </section>
 
         {questionReady ? (
@@ -2417,7 +2656,7 @@ function PromiseCinematicQuestion({ qid, onClose, onChoose, soundOn, onToggleSou
               </button>
             ))}</div>
           </div>
-        ) : <div className="waiting-response promise-watching-note"><span /> {story.waiting}</div>}
+        ) : null}
       </div>
       <div className="progress-row question-progress"><div className="bar"><span style={{ width: qid === 12 ? "50%" : "100%" }} /></div><span>{qid === 12 ? "1/2" : "2/2"}</span></div>
     </div>
@@ -2507,14 +2746,6 @@ function Q14CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
   const visibleCharacters = Math.ceil(activeBeat.line.length * phaseProgress);
   const displayedLine = phase === "question" ? activeBeat.line : activeBeat.line.slice(0, visibleCharacters);
   const isDialogue = activeBeat.speaker !== "旁白";
-  const watchingCopy = activeBeat.key === "exit"
-    ? "最后一段路正在云端慢慢亮起……"
-    : activeBeat.key === "flowers"
-      ? "三朵花正在回应三种不同的期待……"
-      : activeBeat.key === "guardian"
-        ? "守门怪把最后的规则交给了你……"
-        : "Lovera 在等你选出最后一块拼图……";
-
   return (
     <div className="screen fade-in question-screen future-question-screen q14-cinematic-screen">
       <Nav title={`${chapter.no} ${chapter.nameEn}`} onClose={closeQuestion} />
@@ -2552,9 +2783,13 @@ function Q14CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
               {isDialogue ? "“" : ""}{displayedLine}{isDialogue ? "”" : ""}
               {phase !== "question" && phaseProgress < 1 && <span className="narration-cursor" />}
             </p>
-            {audioNeedsTap && <button type="button" className="question-listen-prompt" onClick={retryAudio}><span>♪</span> 点一下，继续听这段故事</button>}
+            {phase !== "question" && (
+              <div className="future-land-caption-actions">
+                {audioNeedsTap && <button type="button" className="question-listen-prompt" onClick={retryAudio}><span>♪</span> 点一下，继续听这段故事</button>}
+                <button type="button" className="question-narration-skip" onClick={skipNarration}>跳过</button>
+              </div>
+            )}
           </div>
-          {phase !== "question" && <button type="button" className="question-narration-skip" onClick={skipNarration}>跳过</button>}
         </section>
 
         {phase === "question" ? (
@@ -2566,7 +2801,7 @@ function Q14CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
               </button>
             ))}</div>
           </div>
-        ) : <div className="waiting-response future-land-watching-note"><span /> {watchingCopy}</div>}
+        ) : null}
       </div>
       <div className="progress-row question-progress"><div className="bar"><span style={{ width: "100%" }} /></div><span>1/1</span></div>
     </div>
@@ -2756,10 +2991,10 @@ function StandardQuestionScreen({
                 <span aria-hidden="true">♪</span> 点一下，听 Lovera 说话
               </button>
             )}
+            {!dialogueComplete && (
+              <button type="button" className="question-narration-skip" onClick={skipQuestionNarration}>跳过</button>
+            )}
           </div>
-          {!dialogueComplete && (
-            <button type="button" className="question-narration-skip" onClick={skipQuestionNarration}>跳过</button>
-          )}
         </div>
         {dialogueComplete ? (
           <div className="answer-reveal">
@@ -2889,16 +3124,53 @@ export function PuzzleScreen({ answers, onBack, onShare }) {
   );
 }
 
-export function ChatScreen({ messages, draft, setDraft, onBack, onSend }) {
+export function ChatScreen({ messages, draft, setDraft, onBack, onSend, isReplying }) {
+  const chatScrollRef = useRef(null);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const container = chatScrollRef.current;
+      if (container) container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [isReplying, messages]);
+
   return (
-    <div className="screen fade-in">
-      <Nav title="Lovera" onBack={onBack} />
-      <div className="scroll" style={{ paddingTop: 8 }}>
+    <div className="screen fade-in lovera-chat-screen">
+      <div className="lovera-chat-ambient" aria-hidden="true">
+        <span>✦</span><span>·</span><span>♥</span><span>✦</span>
+      </div>
+      <Nav title="" onBack={onBack} />
+      <header className="lovera-chat-heading">
+        <span>HEART ISLANDS</span>
+        <h1>Lovera</h1>
+        <div aria-hidden="true"><i />♥<i /></div>
+        <p>你的心灵旅伴</p>
+      </header>
+      <div className="lovera-chat-thread scroll" ref={chatScrollRef} aria-live="polite">
         {messages.map((m, i) => (
-          <div key={i} className={`chat-bubble ${m.role}`}>
-            {m.role === "lora" ? `Lovera：${m.text}` : m.text}
+          <div key={`${m.role}-${i}`} className={`chat-message-row ${m.role}`}>
+            {m.role === "lora" && (
+              <div className="chat-lovera-avatar" aria-hidden="true"><Mascot mood="happy" size={42} /></div>
+            )}
+            <div className={`chat-bubble ${m.role}`}>
+              <div className="chat-message-meta">
+                <strong>{m.role === "lora" ? "Lovera" : "你"}</strong>
+                <time>{m.time || "旅途中"}</time>
+              </div>
+              <p>{m.text}</p>
+            </div>
           </div>
         ))}
+        {isReplying && (
+          <div className="chat-message-row lora chat-is-typing">
+            <div className="chat-lovera-avatar" aria-hidden="true"><Mascot mood="idle" size={42} /></div>
+            <div className="chat-bubble lora">
+              <div className="chat-message-meta"><strong>Lovera</strong><time>正在听你说</time></div>
+              <div className="chat-typing-dots" aria-label="Lovera 正在回复"><i /><i /><i /></div>
+            </div>
+          </div>
+        )}
       </div>
       <form
         className="composer"
@@ -2910,66 +3182,190 @@ export function ChatScreen({ messages, draft, setDraft, onBack, onSend }) {
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="Say something..."
+          placeholder="和 Lovera 说点什么……"
+          maxLength={600}
+          disabled={isReplying}
         />
-        <button type="button" className="mic" aria-label="语音" onClick={() => setDraft("今天的选择有点难，但好像很准。")}>
-          ♪
+        <button type="submit" className="mic" aria-label="发送消息" disabled={isReplying || !draft.trim()}>
+          ✦
         </button>
       </form>
     </div>
   );
 }
 
-export function PersonalityResult({ profile, onBack, onNext, onPrev, onDetails }) {
-  const m = profile.modules;
+const POEM_BLOCK_LABELS = {
+  opening: "序章",
+  core_longing: "核心渴望",
+  relationship_need: "相处方式",
+  tension: "内在张力",
+  red_line: "关系边界",
+  growth_edge: "风暴之后",
+  closing: "Lovera 的话",
+};
+
+const POEM_LINE_PAUSE = {
+  soft: 900,
+  normal: 1120,
+  accent: 1380,
+  hero: 1780,
+};
+
+function getPoemLinePause(line, isBlockEnd) {
+  const emphasis = line.emphasis || "normal";
+  const readingTime = Math.min(380, Math.max(120, line.text.length * 17));
+  return (POEM_LINE_PAUSE[emphasis] || POEM_LINE_PAUSE.normal)
+    + readingTime
+    + (isBlockEnd ? 360 : 0);
+}
+
+function renderPoemText(text, phrases = []) {
+  const phrase = phrases.find((item) => text.includes(item));
+  if (!phrase) return text;
+  const start = text.indexOf(phrase);
   return (
-    <div className="screen fade-in personality-result">
-      <Nav title="Your Love Personality" onBack={onBack} />
-      <div className="result-overview scroll">
-        <p className="sub result-subtitle">这不是一个标签，而是一份关于你如何心动、靠近与被爱的说明书。</p>
-        {profile.generatedBy === "deepseek" && <span className="ai-result-badge">✦ DeepSeek 深度个性解读</span>}
-        <div className="result-hero">
-          <div className="glow-ring">
-            <Mascot mood="happy" size={140} />
-          </div>
-          <h2 className="h-serif">{m.name}</h2>
+    <>
+      {text.slice(0, start)}
+      <mark>{phrase}</mark>
+      {text.slice(start + phrase.length)}
+    </>
+  );
+}
+
+export function PersonalityResult({ profile, view = "cover", onBack, onOpenPoem, onDetails }) {
+  const m = profile.modules;
+  const poemBlocks = profile.poem_blocks || [];
+  const poemLines = poemBlocks.flatMap((block, blockIndex) =>
+    block.lines.map((line, lineIndex) => ({ block, blockIndex, line, lineIndex })),
+  );
+  const [visibleLineCount, setVisibleLineCount] = useState(0);
+  const [showFullPoem, setShowFullPoem] = useState(false);
+  const poemScrollRef = useRef(null);
+  const isComplete = visibleLineCount >= poemLines.length;
+  const lastVisibleLine = poemLines[Math.max(0, visibleLineCount - 1)];
+  const currentBlock = lastVisibleLine ? lastVisibleLine.blockIndex + 1 : 1;
+
+  useEffect(() => {
+    if (view !== "poem") {
+      setVisibleLineCount(0);
+      setShowFullPoem(false);
+      return undefined;
+    }
+    if (showFullPoem) {
+      setVisibleLineCount(poemLines.length);
+      return undefined;
+    }
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion || poemLines.length === 0) {
+      setVisibleLineCount(poemLines.length);
+      setShowFullPoem(true);
+      return undefined;
+    }
+
+    setVisibleLineCount(0);
+    let elapsed = 620;
+    const timers = poemLines.map(({ block, line, lineIndex }, index) => {
+      const timer = window.setTimeout(() => setVisibleLineCount(index + 1), elapsed);
+      elapsed += getPoemLinePause(line, lineIndex === block.lines.length - 1);
+      return timer;
+    });
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
+  }, [profile.draft_poem, showFullPoem, view]);
+
+  useEffect(() => {
+    if (view !== "poem" || visibleLineCount < 2 || !poemScrollRef.current) return;
+    const frame = window.requestAnimationFrame(() => {
+      const container = poemScrollRef.current;
+      const visibleLines = container?.querySelectorAll(".insight-line.is-visible");
+      const latestLine = visibleLines?.[visibleLines.length - 1];
+      if (!container || !latestLine) return;
+      const containerRect = container.getBoundingClientRect();
+      const lineRect = latestLine.getBoundingClientRect();
+      const overflow = lineRect.bottom - (containerRect.bottom - 88);
+      if (overflow > 0) container.scrollTo({ top: container.scrollTop + overflow, behavior: "smooth" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [visibleLineCount, view]);
+
+  if (view === "cover") {
+    return (
+      <div className="screen fade-in personality-result love-portrait-cover">
+        <div className="poem-ambient" aria-hidden="true">
+          <i className="poem-moon" />
+          <i className="poem-mist" />
+          <i className="poem-island" />
+          <span /><span /><span /><span />
+        </div>
+        <Nav title="My Love Personality" onBack={onBack} />
+        <button type="button" className="love-personality-card" onClick={onOpenPoem}>
+          <span className="love-card-kicker">✦ 你的恋爱人格</span>
+          <div className="love-card-mascot"><Mascot mood="happy" size={132} /></div>
+          <h2>{m.name}</h2>
           <p>{m.core}</p>
-        </div>
-        {m.opening && <div className="result-letter">{m.opening}</div>}
-        <div className="result-insights">
-          <article>
-            <span>01</span>
-            <h3>你为何心动</h3>
-            <p>{m.heartTrigger || m.beLoved}</p>
-          </article>
-          <article>
-            <span>02</span>
-            <h3>安全感从哪里来</h3>
-            <p>{m.security || m.hidden}</p>
-          </article>
-          <article>
-            <span>03</span>
-            <h3>冲突中的真实需要</h3>
-            <p>{m.conflictRepair}</p>
-          </article>
-          <article>
-            <span>04</span>
-            <h3>你不容易说出口的</h3>
-            <p>{m.hidden}</p>
-          </article>
-        </div>
-        <button className="cta result-details" onClick={onDetails}>
-          查看完整恋爱说明书
+          <span className="love-card-open">点击展开 Lovera 写给你的诗 <b>→</b></span>
         </button>
+        <p className="love-cover-note">基于你的 14 个选择</p>
       </div>
-      <div className="swipe-row">
-        <button className="icon-btn" onClick={onPrev}>
-          ‹
-        </button>
-        <span className="sub">左右查看更多</span>
-        <button className="icon-btn" onClick={onNext}>
-          ›
-        </button>
+    );
+  }
+
+  return (
+    <div className={`screen fade-in personality-result insight-poem-result ${showFullPoem ? "show-full-poem" : ""}`}>
+      <div className="poem-ambient" aria-hidden="true">
+        <i className="poem-moon" />
+        <i className="poem-mist" />
+        <i className="poem-mist poem-mist-two" />
+        <i className="poem-island" />
+        <span /><span /><span /><span />
+      </div>
+      <Nav title="Lovera 写给你的诗" onBack={onBack} />
+      <div className="insight-poem-scroll scroll" ref={poemScrollRef}>
+        <header className="insight-poem-intro">
+          <span>✦ 心之群岛 · 你的关系画像</span>
+          <div className="insight-poem-mascot"><Mascot mood="happy" size={76} /></div>
+          <p>有些需要，不必急着命名。</p>
+          <h2>{m.name}</h2>
+          <em>基于你的 14 个选择</em>
+        </header>
+
+        <div className="insight-poem-progress" aria-label={`诗篇呈现进度 ${currentBlock}/${poemBlocks.length || 1}`}>
+          <span><i style={{ width: `${(currentBlock / Math.max(1, poemBlocks.length)) * 100}%` }} /></span>
+          <b>{String(currentBlock).padStart(2, "0")} / {String(poemBlocks.length || 1).padStart(2, "0")}</b>
+        </div>
+
+        <div className="insight-poem-stanzas" aria-live="polite">
+          {poemBlocks.map((block, blockIndex) => {
+            const blockStart = poemLines.findIndex((item) => item.blockIndex === blockIndex);
+            const blockVisible = visibleLineCount > blockStart;
+            return (
+              <article key={block.id} className={`insight-stanza ${blockVisible ? "is-revealed" : ""}`}>
+                <span className="insight-stanza-number">{String(blockIndex + 1).padStart(2, "0")}</span>
+                <small>{POEM_BLOCK_LABELS[block.type] || "写给你"}</small>
+                {block.lines.map((line, lineIndex) => {
+                  const absoluteIndex = blockStart + lineIndex;
+                  return (
+                    <p key={`${block.id}-${lineIndex}`} className={`insight-line is-${line.emphasis || "normal"} ${absoluteIndex < visibleLineCount ? "is-visible" : ""}`}>
+                      {renderPoemText(line.text, block.hero_phrases)}
+                    </p>
+                  );
+                })}
+              </article>
+            );
+          })}
+        </div>
+
+        {!isComplete && (
+          <button type="button" className="poem-finish-now" onClick={() => setShowFullPoem(true)}>
+            展开完整诗篇
+          </button>
+        )}
+
+        {isComplete && (
+          <button type="button" className="poem-manual-entry" onClick={onDetails}>
+            <span>✦ 查看你的图形化画像</span>
+            <strong>打开完整恋爱说明书 <b>→</b></strong>
+          </button>
+        )}
       </div>
     </div>
   );
@@ -3027,26 +3423,44 @@ function RadarChart({ data }) {
   };
   const poly = data.map((d, i) => pt(i, d.value).join(",")).join(" ");
   const rings = [0.35, 0.62, 1];
+  const shortLabel = (label) => ({
+    "安全感需求": "安全感",
+    "表达方式": "表达",
+    "亲密接近": "亲密",
+    "冲突修复": "修复",
+    "心动触发": "心动",
+  }[label] || label);
   return (
-    <svg viewBox="0 0 280 280" width="100%" height="240">
+    <svg className="radar-chart" viewBox="0 0 280 280" width="100%" height="240" role="img" aria-label="你的关系维度雷达图">
+      <title>你的关系维度雷达图</title>
+      <defs>
+        <linearGradient id="relationshipRadarFill" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#f0a773" stopOpacity="0.62" />
+          <stop offset="100%" stopColor="#9f7eb9" stopOpacity="0.36" />
+        </linearGradient>
+      </defs>
       {rings.map((s) => (
         <polygon
           key={s}
           fill="none"
-          stroke="rgba(232,137,74,0.22)"
+          stroke="rgba(160,112,117,0.2)"
           points={data.map((_, i) => pt(i, s * 100).join(",")).join(" ")}
         />
       ))}
       {data.map((_, i) => {
         const [x, y] = pt(i, 100);
-        return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="rgba(232,137,74,0.25)" />;
+        return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="rgba(160,112,117,0.18)" />;
       })}
-      <polygon points={poly} fill="rgba(224,122,60,0.28)" stroke="#e07a3c" strokeWidth="2" />
+      <polygon points={poly} fill="url(#relationshipRadarFill)" stroke="#cc8568" strokeWidth="2" />
+      {data.map((d, i) => {
+        const [x, y] = pt(i, d.value);
+        return <circle key={`point-${d.label}`} cx={x} cy={y} r="3.2" fill="#fff8ec" stroke="#c67c62" strokeWidth="2" />;
+      })}
       {data.map((d, i) => {
         const [x, y] = pt(i, 118);
         return (
-          <text key={d.label} x={x} y={y} textAnchor="middle" fontSize="10" fill="#6a4e42">
-            {d.label} {d.value}
+          <text key={d.label} x={x} y={y} textAnchor="middle" fontSize="9" fontWeight="700" fill="#755f69">
+            {shortLabel(d.label)} {d.value}
           </text>
         );
       })}
@@ -3107,137 +3521,90 @@ export function ShareScreen({ profile, onBack, onShare }) {
 
 export function ManualScreen({ profile, onBack }) {
   const m = profile.modules;
+  const insight = profile.insight_profile;
+  const topDimensions = insight?.top_dimensions || profile.deterministic_profile?.top_dimensions || [];
+  const portraitCards = [
+    { icon: "✦", label: "核心渴望", value: insight?.core_longing?.summary, evidence: insight?.core_longing?.evidence },
+    { icon: "↔", label: "关系风格", value: insight?.relationship_style?.summary, evidence: insight?.relationship_style?.evidence },
+    { icon: "◉", label: "安全感", value: insight?.safety_needs?.[0]?.summary, evidence: insight?.safety_needs?.[0]?.evidence },
+    { icon: "≈", label: "内在张力", value: insight?.tensions?.[0]?.interpretation, evidence: insight?.tensions?.[0]?.evidence },
+    { icon: "!", label: "关系边界", value: insight?.red_lines?.[0]?.summary, evidence: insight?.red_lines?.[0]?.evidence },
+    { icon: "↑", label: "可以练习", value: insight?.growth_edge?.summary, evidence: insight?.growth_edge?.evidence },
+  ].filter((item) => item.value);
+  const evidenceLabel = (evidence = []) => evidence
+    .map((evidenceId) => evidenceId.split("-")[0])
+    .join(" · ");
+
   return (
-    <div className="screen fade-in">
+    <div className="screen fade-in manual-screen">
       <Nav title="个人恋爱说明书" onBack={onBack} />
       <div className="manual scroll">
-        <p className="eyebrow">Heart Islands · Love Profile</p>
-        <h2>「{m.name}」</h2>
-        {m.opening && (
-          <div className="block manual-letter">
-            <h3>1｜先送给你一封短笺</h3>
-            <p>{m.opening}</p>
+        <header className="manual-hero">
+          <span>HEART ISLANDS · LOVE PROFILE</span>
+          <div>
+            <h2>「{m.name}」</h2>
+            <Mascot mood="happy" size={68} />
           </div>
-        )}
-        <div className="block">
-          <h3>2｜一句话人格核心</h3>
-          <p>{m.core}</p>
-        </div>
-        {m.heartTrigger && (
-          <div className="block">
-            <h3>3｜什么会让你真正心动</h3>
-            <p>{m.heartTrigger}</p>
-          </div>
-        )}
-        <div className="block">
-          <h3>4｜你的爱情底层逻辑</h3>
-          <p>{m.logic}</p>
-        </div>
-        <div className="block">
-          <h3>5｜你希望怎样被爱</h3>
-          <p>{m.beLoved}</p>
-        </div>
-        <div className="block">
-          <h3>6｜你会怎样爱一个人</h3>
-          <p>{m.youLove}</p>
-        </div>
-        {m.security && (
-          <div className="block">
-            <h3>7｜你的安全感来自哪里</h3>
-            <p>{m.security}</p>
-          </div>
-        )}
-        <div className="block">
-          <h3>8｜你的亲密距离与个人边界</h3>
-          <p>{m.closeness}</p>
-          <p style={{ marginTop: 8 }}>{m.autonomy}</p>
-        </div>
-        <div className="block">
-          <h3>9｜冲突中的你</h3>
-          <p>
-            <strong>第一反应：</strong>
-            {m.conflictFirst}
-          </p>
-          <p style={{ marginTop: 8 }}>
-            <strong>真正想要的修复：</strong>
-            {m.conflictRepair}
-          </p>
-          <p style={{ marginTop: 8 }}>{m.conflictDiff}</p>
-        </div>
-        {m.commitment && (
-          <div className="block">
-            <h3>10｜承诺、自由与共同未来</h3>
-            <p>{m.commitment}</p>
-          </div>
-        )}
-        <div className="block">
-          <h3>11｜你最深的一层隐藏需求</h3>
-          <p>{m.hidden}</p>
-        </div>
-        <div className="block">
-          <h3>12｜你的关系雷区</h3>
-          <p>{m.landmine}</p>
-        </div>
-        <div className="block">
-          <h3>13｜你身上一个看似矛盾的地方</h3>
-          <p>
-            <strong>{m.dual.title}。</strong>
-            {m.dual.body}
-          </p>
-        </div>
-        <div className="block">
-          <h3>14｜你的关系优势</h3>
-          <ul>
-            {m.strengths.map((s) => (
-              <li key={s}>{s}</li>
-            ))}
-          </ul>
-        </div>
-        <div className="block">
-          <h3>15｜需要温柔留意的关系风险</h3>
-          {m.risks.map((s) => (
-            <p key={s} style={{ marginBottom: 6 }}>
-              {s}
-            </p>
-          ))}
-        </div>
-        <div className="block">
-          <h3>16｜适合你的伴侣</h3>
-          {m.partner.map((s) => (
-            <p key={s} style={{ marginBottom: 6 }}>
-              · {s}
-            </p>
-          ))}
-        </div>
-        {m.growthAdvice?.length > 0 && (
-          <div className="block growth-block">
-            <h3>17｜让关系更舒服的具体练习</h3>
-            {m.growthAdvice.map((s, index) => (
-              <p key={s}><strong>{index + 1}.</strong> {s}</p>
+          <p>{insight?.core_longing?.summary || m.core}</p>
+          <div className="manual-keywords">
+            {topDimensions.map((dimension) => (
+              <span key={dimension.id}>{dimension.label}<b>{dimension.score}</b></span>
             ))}
           </div>
-        )}
-        <div className="block">
-          <h3>18｜给未来伴侣的使用说明</h3>
-          <p style={{ fontWeight: 600, color: "var(--orange-hot)" }}>“{m.manual}”</p>
-        </div>
-        <div className="block">
-          <h3>19｜这份画像从哪里来</h3>
-          {m.evidence.map((e) => (
-            <div className="evidence" key={e.title}>
-              <strong>{e.title}</strong>
-              <p>来自：{e.from}</p>
-              <p>{e.body}</p>
-            </div>
-          ))}
-        </div>
-        {m.closing && (
-          <div className="block manual-closing">
-            <h3>20｜最后，想对你说</h3>
-            <p>{m.closing}</p>
+        </header>
+
+        <section className="manual-section manual-radar-card">
+          <div className="manual-section-heading">
+            <span>01</span>
+            <div><small>RELATIONSHIP RADAR</small><h3>你的关系能量图</h3></div>
           </div>
-        )}
-        <p className="sub" style={{ fontSize: 12, paddingBottom: 20 }}>
+          <RadarChart data={profile.radar} />
+          <p className="manual-radar-note">分数代表你在本次选择中表现出的<strong>关注强度</strong>，不是好坏排名。</p>
+        </section>
+
+        <section className="manual-section manual-portrait-section">
+          <div className="manual-section-heading">
+            <span>02</span>
+            <div><small>YOUR LOVE PORTRAIT</small><h3>这首诗背后的你</h3></div>
+          </div>
+          <div className="manual-portrait-grid">
+            {portraitCards.map((item, index) => (
+              <article key={item.label} className={`manual-portrait-card tone-${index + 1}`}>
+                <i>{item.icon}</i>
+                <div>
+                  <strong>{item.label}</strong>
+                  <p>{item.value}</p>
+                  {item.evidence?.length > 0 && <small>依据 {evidenceLabel(item.evidence)}</small>}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="manual-section manual-playbook">
+          <div className="manual-section-heading">
+            <span>03</span>
+            <div><small>LOVE PLAYBOOK</small><h3>让关系更舒服的方法</h3></div>
+          </div>
+          <article><span>冲突后</span><strong>你需要的不是胜负，而是回来。</strong><p>{m.conflictRepair}</p></article>
+          <article><span>适配伴侣</span><strong>稳定、坦诚，也尊重你的节奏。</strong><p>{m.partner?.[0]}</p></article>
+          <article><span>关系练习</span><strong>把需要说具体，比让对方猜更温柔。</strong><p>{insight?.growth_edge?.summary || m.growthAdvice?.[0]}</p></article>
+        </section>
+
+        <section className="manual-section manual-strengths">
+          <div className="manual-section-heading">
+            <span>04</span>
+            <div><small>YOUR STRENGTHS</small><h3>你带进关系里的光</h3></div>
+          </div>
+          <div>{m.strengths.slice(0, 3).map((strength) => <span key={strength}>{strength}</span>)}</div>
+        </section>
+
+        <blockquote className="manual-partner-note">
+          <small>TO YOUR FUTURE PARTNER</small>
+          <p>“{m.manual}”</p>
+        </blockquote>
+
+        <p className="manual-disclaimer">
           以上判断来自你在心之群岛里的选择，描述的是关系偏好，不是心理诊断。
         </p>
       </div>
@@ -3247,19 +3614,27 @@ export function ManualScreen({ profile, onBack }) {
 
 export function Generating({ status }) {
   return (
-    <div className="screen fade-in" style={{ textAlign: "center", justifyContent: "center", gap: 16 }}>
-      <StarEmblem />
-      <Mascot mood="happy" size={140} />
-      <h2 className="h-serif" style={{ fontSize: 24 }}>
-        正在拼出最真实的你
-      </h2>
-      <p className="sub">{status}</p>
+    <div className="screen fade-in generating-screen">
+      <div className="generating-sparkles" aria-hidden="true">
+        <span>✦</span><span>·</span><span>♥</span><span>✦</span><span>·</span>
+      </div>
+      <div className="generating-emblem"><StarEmblem size={66} /></div>
+      <div className="generating-lovera">
+        <span className="generating-halo" aria-hidden="true" />
+        <Mascot mood="happy" size={94} />
+      </div>
+      <div className="generating-copy">
+        <span>HEART ISLANDS · LOVE PORTRAIT</span>
+        <h2 className="h-serif">正在拼出最真实的你</h2>
+        <div className="generating-divider" aria-hidden="true"><i />♥<i /></div>
+        <p>{status || "Lovera 正在整理你的关系画像……"}</p>
+      </div>
       <div className="ai-loader" aria-label="正在生成">
         <span />
         <span />
         <span />
       </div>
-      <p className="generating-note">完整画像通常需要 10–20 秒</p>
+      <p className="generating-note">请稍等片刻，你的关系画像很快就好</p>
     </div>
   );
 }

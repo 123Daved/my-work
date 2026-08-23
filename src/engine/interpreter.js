@@ -818,6 +818,176 @@ function oneLiner(profile) {
   return `${profile.name}：${profile.core}`;
 }
 
+const DIMENSION_CONFIG = {
+  responsiveness: { label: "关系回应", questions: [1, 3, 4, 11, 14] },
+  closeness: { label: "亲密接近", questions: [2, 3, 12] },
+  autonomy: { label: "自由与边界", questions: [2, 10, 12, 13, 14] },
+  predictability: { label: "稳定与可预期", questions: [3, 4, 6, 7, 10] },
+  repair: { label: "冲突修复", questions: [8, 9] },
+  partnership: { label: "共建与成长", questions: [5, 7, 9, 13, 14] },
+};
+
+const evidenceId = (answers, questionId) => `Q${questionId}-${pick(answers, questionId)}`;
+const evidenceFor = (answers, questionIds) => questionIds.map((questionId) => evidenceId(answers, questionId));
+
+function buildDeterministicProfile(answers, primary, meta) {
+  const scores = Object.fromEntries(
+    Object.keys(DIMENSION_CONFIG).map((dimensionId) => [dimensionId, meta[dimensionId]]),
+  );
+  const topDimensions = Object.entries(scores)
+    .sort((left, right) => right[1] - left[1])
+    .slice(0, 3)
+    .map(([id, score]) => ({
+      id,
+      label: DIMENSION_CONFIG[id].label,
+      score,
+      evidence: evidenceFor(answers, DIMENSION_CONFIG[id].questions),
+    }));
+
+  return {
+    scores,
+    top_dimensions: topDimensions,
+    selected_answers: Object.entries(primary).map(([questionId, meaning]) => ({
+      id: questionId,
+      choice: meaning.choice,
+      label: meaning.name,
+      need: meaning.need,
+      evidence: `${questionId}-${meaning.choice}`,
+    })),
+  };
+}
+
+function buildLocalInsightProfile(answers, deterministicProfile, modules) {
+  const safetyEvidence = evidenceFor(answers, [3, 4, 11]);
+  const relationshipEvidence = evidenceFor(answers, [2, 12, 14]);
+  const tensionEvidence = evidenceFor(answers, [2, 10, 12, 14]);
+  return {
+    top_dimensions: deterministicProfile.top_dimensions,
+    core_longing: {
+      summary: modules.core,
+      evidence: evidenceFor(answers, [1, 3, 14]),
+    },
+    relationship_style: {
+      summary: modules.dual.title,
+      evidence: relationshipEvidence,
+    },
+    safety_needs: [
+      { summary: modules.security, evidence: safetyEvidence },
+      { summary: modules.hidden, evidence: evidenceFor(answers, [4, 11]) },
+    ],
+    red_lines: [
+      { summary: modules.landmine, evidence: evidenceFor(answers, [10]) },
+    ],
+    tensions: [
+      {
+        need_a: "靠近时被认真回应",
+        need_b: "在关系里保留自己的节奏",
+        interpretation: modules.dual.body,
+        evidence: tensionEvidence,
+      },
+    ],
+    growth_edge: {
+      summary: modules.growthAdvice[0],
+      evidence: evidenceFor(answers, [8, 9, 11]),
+    },
+    confidence: "high",
+    uncertainties: [],
+  };
+}
+
+function buildLocalPoem(answers, modules, insightProfile) {
+  const q = (n) => pick(answers, n);
+  const quietNeed = q(11) === "A"
+    ? "你希望有人先看见你的安静，再轻轻问一句。"
+    : q(11) === "B"
+      ? "你要陪伴，也想由自己决定什么时候开口。"
+      : "有时一件具体的小事，比追问更能把你接回来。";
+  const repairLine = q(9) === "A"
+    ? "你希望把话说完，不让裂缝一直悬着。"
+    : q(9) === "B"
+      ? "你允许彼此冷静，但离开之后，要记得回来。"
+      : "你不要求每次深谈，只希望问题别在沉默里堆积。";
+  const closingLine = q(14) === "A"
+    ? "愿你遇见愿意坦诚回应、不让你反复猜测的人。"
+    : q(14) === "B"
+      ? "愿你既能安心靠近，也能自由呼吸。"
+      : "愿你遇见愿意一起解决问题、一起成长的人。";
+  const blocks = [
+    {
+      id: "opening",
+      type: "opening",
+      lines: [
+        { text: "你认真走过了十四个选择。", emphasis: "soft" },
+        { text: "那些没有说出口的需要，也终于有了形状。", emphasis: "normal" },
+      ],
+      hero_phrases: [],
+      delay_ms: 0,
+    },
+    {
+      id: "core-longing",
+      type: "core_longing",
+      lines: [
+        { text: "你真正寻找的，", emphasis: "soft" },
+        { text: modules.dual.title, emphasis: "hero" },
+        { text: modules.core, emphasis: "normal" },
+      ],
+      hero_phrases: [],
+      delay_ms: 700,
+    },
+    {
+      id: "relationship-need",
+      type: "relationship_need",
+      lines: [
+        { text: "你想被看见，却不想被看管。", emphasis: "normal" },
+        { text: quietNeed, emphasis: "accent" },
+      ],
+      hero_phrases: [],
+      delay_ms: 1450,
+    },
+    {
+      id: "tension",
+      type: "tension",
+      lines: [
+        { text: insightProfile.tensions[0].need_a, emphasis: "normal" },
+        { text: insightProfile.tensions[0].need_b, emphasis: "normal" },
+        { text: modules.dual.title, emphasis: "hero" },
+      ],
+      hero_phrases: [],
+      delay_ms: 2200,
+    },
+    {
+      id: "repair",
+      type: "growth_edge",
+      lines: [
+        { text: "当关系遇见风暴，", emphasis: "soft" },
+        { text: repairLine, emphasis: "normal" },
+        { text: "把需要说得更具体，也把回来的时间说清楚。", emphasis: "accent" },
+      ],
+      hero_phrases: [],
+      delay_ms: 3000,
+    },
+    {
+      id: "closing",
+      type: "closing",
+      lines: [
+        { text: "Lovera 会替你记住：", emphasis: "soft" },
+        { text: closingLine, emphasis: "hero" },
+        { text: "每一次靠近，都不必以弄丢自己为代价。", emphasis: "normal" },
+      ],
+      hero_phrases: [],
+      delay_ms: 3800,
+    },
+  ];
+
+  return {
+    draft_poem: blocks
+      .map((block) => block.lines.map((line) => line.text).join("\n"))
+      .join("\n\n"),
+    poem_blocks: blocks,
+    evidence_used: [...new Set(evidenceFor(answers, Array.from({ length: 14 }, (_, index) => index + 1)))],
+  };
+}
+
 export function interpret(answers) {
   const primary = extractPrimary(answers);
   const meta = computeMeta(answers);
@@ -861,6 +1031,9 @@ export function interpret(answers) {
     repair: conf([true, true], q(8) === "C" && q(9) === "C"),
     partnership: conf([q(5) === "C", q(7) === "B", q(13) === "B", q(14) === "C"].filter(Boolean).length),
   };
+  const deterministicProfile = buildDeterministicProfile(answers, primary, meta);
+  const insightProfile = buildLocalInsightProfile(answers, deterministicProfile, modules);
+  const localPoem = buildLocalPoem(answers, modules, insightProfile);
 
   return {
     primary,
@@ -882,6 +1055,9 @@ export function interpret(answers) {
     shareLine: oneLiner({ name, core }),
     confidence,
     confPhrase,
+    deterministic_profile: deterministicProfile,
+    insight_profile: insightProfile,
+    ...localPoem,
   };
 }
 

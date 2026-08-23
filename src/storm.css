@@ -1,6 +1,24 @@
 /* Chapter 4: Storm Canyon cinematic and shared narration-skip placement */
 .storm-question-screen {
-  background: radial-gradient(circle at 50% 12%, #ffe0c7aa, transparent 38%), linear-gradient(180deg, #e5d7ed, #ead8e8 30%, #f6d2bf);
+  background: transparent;
+}
+
+.phone-screen.theme-question-q8 {
+  background:
+    linear-gradient(180deg, #402b5b05, #4e325e08 47%, #2e1b3f78),
+    url("./assets/q8-storm-fork-bg.png") center 48% / cover no-repeat;
+}
+
+.phone-screen.theme-question-q9 {
+  background:
+    linear-gradient(180deg, #40285608, #4d2c520a 44%, #2b193b80),
+    url("./assets/q9-repair-cave-bg.png") center 55% / cover no-repeat;
+}
+
+.phone-screen.theme-question-q8 .status-bar,
+.phone-screen.theme-question-q9 .status-bar {
+  color: #4f3853;
+  text-shadow: 0 1px 12px #fff8f0b8;
 }
 
 .storm-question-screen .nav {
@@ -9,39 +27,45 @@
   border: 1px solid #ffffff57;
 }
 
-.storm-cinematic-scroll { padding-top: 4px; }
+.storm-cinematic-scroll {
+  margin-right: -22px;
+  margin-left: -22px;
+  padding: 4px 22px 8px;
+  overflow-x: hidden;
+}
 
 .storm-cinematic-stage {
   --storm-time: 0s;
   position: relative;
-  min-height: 548px;
-  overflow: hidden;
-  border: 1px solid #ffffffb8;
-  border-radius: 28px;
-  box-shadow: 0 22px 50px #462c571f, inset 0 1px 0 #ffffffb3;
+  min-height: 520px;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
   isolation: isolate;
+  transition: min-height .55s cubic-bezier(.2,.72,.24,1);
+}
+
+.storm-cinematic-stage.phase-question {
+  min-height: 350px;
 }
 
 .q8-storm-stage {
-  background: linear-gradient(180deg, #402b5b05, #4e325e08 47%, #2e1b3f94), url("./assets/q8-storm-fork-bg.png") center 48% / cover no-repeat;
+  background: transparent;
 }
 
 .q9-repair-stage {
-  background: linear-gradient(180deg, #40285608, #4d2c520a 44%, #2b193b99), url("./assets/q9-repair-cave-bg.png") center 55% / cover no-repeat;
+  background: transparent;
 }
 
 .storm-cinematic-stage::after {
-  content: "";
-  position: absolute;
-  z-index: 2;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(circle at 50% 54%, transparent 0 27%, #321e4214 76%), linear-gradient(180deg, transparent 50%, #2817366b);
+  display: none;
 }
 
 .storm-toolbar { position: relative; z-index: 30; }
 .storm-toolbar > span { color: #4b334ce6; text-shadow: 0 1px 9px #ffffffc2; }
-.storm-scene { position: absolute; z-index: 3; inset: 42px 0 0; overflow: hidden; }
+.storm-scene { position: absolute; z-index: 3; inset: 42px 0 0; overflow: visible; }
 
 .storm-front {
   position: absolute;
@@ -176,11 +200,12 @@
 .storm-caption {
   position: absolute;
   z-index: 24;
+  top: 58px;
   right: 13px;
-  bottom: 13px;
+  bottom: auto;
   left: 13px;
-  min-height: 104px;
-  padding: 11px 13px 41px;
+  min-height: 96px;
+  padding: 11px 13px 12px;
   border: 1px solid #ffffffba;
   border-radius: 18px;
   background: #39264ab3;
@@ -193,6 +218,26 @@
 .storm-caption-meta i { color: #fff6ecab; font-style: normal; font-weight: 680; letter-spacing: 0; }
 .storm-caption p { color: #fffaf6; font-size: 13px; font-weight: 780; line-height: 1.53; text-shadow: 0 2px 12px #1f132a80; animation: q1-caption-in .35s ease both; }
 .storm-caption .question-listen-prompt { color: #6e4560; background: #ffeed5f0; }
+
+.storm-caption-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.storm-caption-actions .question-listen-prompt {
+  flex: 1;
+  width: auto;
+  margin-top: 0;
+}
+
+.storm-caption-actions .question-narration-skip {
+  position: static;
+  flex: 0 0 auto;
+  margin-left: auto;
+}
 
 /* All cinematic and standard question narration skips now sit inside the lower-right of the caption area. */
 .question-narration-skip {
@@ -219,13 +264,42 @@
 }
 .question-narration-skip:hover { background: #fff6e83d; }
 .question-narration-skip:active { transform: scale(.95); }
-.q2-caption, .cave-caption, .resource-caption { padding-bottom: 41px; }
+.q2-caption, .cave-caption { padding-bottom: 41px; }
+.resource-caption { padding-bottom: 12px; }
 .question-scene-card { position: relative; }
 .question-scene-card .question-narration-skip { right: 23px; bottom: 22px; color: #9e5938; border-color: #e48f5c57; background: #fff1e0e6; }
 .question-scene-card .lora-dialogue { padding-bottom: 42px; }
 
 .storm-watching-note { color: #665067; font-weight: 730; text-shadow: 0 1px 10px #ffffffcc; }
-.storm-answer-reveal .question-heading p { color: #493649; font-family: Georgia, "Noto Serif SC", serif; font-size: 17px; }
+.storm-answer-reveal {
+  margin-right: 14px;
+  margin-left: 14px;
+  padding-bottom: 3px;
+}
+.storm-answer-reveal .question-heading { padding: 10px 4px 8px; }
+.storm-answer-reveal .question-heading p { color: #493649; font-family: Georgia, "Noto Serif SC", serif; font-size: 16px; line-height: 1.4; }
+.storm-answer-reveal .question-options { gap: 9px; }
+.storm-answer-reveal .option { min-height: 60px; padding: 10px 12px; }
+.storm-question-screen .question-progress { margin-top: 5px; padding-top: 7px; padding-bottom: 7px; }
+
+.storm-cinematic-stage.phase-question .storm-user-character,
+.storm-cinematic-stage.phase-question .storm-lovera-character,
+.storm-cinematic-stage.phase-question .q9-user-character,
+.storm-cinematic-stage.phase-question .q9-lovera-character {
+  bottom: 10px;
+}
+
+.q9-repair-stage.phase-question .q9-choice-bubble {
+  display: none;
+}
+
+.q9-repair-stage.phase-question .q9-star-fruit {
+  bottom: 54px;
+}
+
+.q9-repair-stage.phase-question .q9-repair-thread {
+  bottom: 84px;
+}
 
 /* Q9 branch-aware repair performance */
 .q9-after-rain { position: absolute; inset: 0 0 18%; background: radial-gradient(circle at 21% 29%, #ffd68f45, transparent 27%), linear-gradient(120deg, transparent 46%, #ffe7b915 63%, transparent 72%); animation: q9-after-rain-breathe 4s ease-in-out infinite; }

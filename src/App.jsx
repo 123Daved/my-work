@@ -5,8 +5,11 @@ import {
   playPrologueNarration,
   playQuestionNarration,
   primeIslandAudio,
+  stopIslandAmbience,
+  stopLoveraNarration,
 } from "./engine/islandAudio.js";
 import {
+  ChapterTransitionVideo,
   ChatScreen,
   Generating,
   IslandIntro,
@@ -22,8 +25,16 @@ import {
 } from "./screens.jsx";
 
 const STORAGE_KEY = "heart-islands-progress";
-const PROFILE_VERSION = 2;
+const PROFILE_VERSION = 3;
 const CINEMATIC_QUESTION_IDS = new Set([1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14]);
+
+function currentChatTime() {
+  return new Date().toLocaleTimeString("zh-CN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}
 
 function loadState() {
   try {
@@ -49,7 +60,7 @@ function loraReply(text, done) {
 }
 
 const INITIAL_CHAT = [
-  { role: "lora", text: "今天玩得怎么样呀？有没有什么有趣的发现？🧡" },
+  { role: "lora", text: "今天玩得怎么样呀？有没有什么有趣的发现？🧡", time: "09:41" },
 ];
 
 export default function App() {
@@ -60,14 +71,17 @@ export default function App() {
   const [chapterId, setChapterId] = useState(1);
   const [qid, setQid] = useState(1);
   const [resultTab, setResultTab] = useState(0);
+  const [resultView, setResultView] = useState("cover");
   const [aiProfile, setAiProfile] = useState(
     saved?.profile?.profileVersion === PROFILE_VERSION ? saved.profile : null,
   );
-  const [generationStatus, setGenerationStatus] = useState("正在连接 DeepSeek，为你整理关系画像……");
+  const [generationStatus, setGenerationStatus] = useState("Lovera 正在根据你的十四个选择整理关系画像……");
   const [messages, setMessages] = useState(saved?.messages || INITIAL_CHAT);
   const [draft, setDraft] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
   const [soundOn, setSoundOn] = useState(false);
   const [lastAnswerText, setLastAnswerText] = useState("");
+  const [chapterTransitionKey, setChapterTransitionKey] = useState("1-2");
   const [toast, setToast] = useState("");
 
   const persist = (patch = {}) => {
@@ -98,7 +112,9 @@ export default function App() {
     setUnlocked(1);
     setMessages(INITIAL_CHAT);
     setDraft("");
+    setChatLoading(false);
     setResultTab(0);
+    setResultView("cover");
     setAiProfile(null);
     setLastAnswerText("");
     setScreen("map");
@@ -106,7 +122,9 @@ export default function App() {
 
   const openChapter = (id) => {
     const ch = CHAPTERS.find((c) => c.id === id);
-    const nextQ = ch.questions.find((q) => !answers[`Q${q}`]) || ch.questions[0];
+    const nextQ = id === 3
+      ? ch.questions[0]
+      : ch.questions.find((q) => !answers[`Q${q}`]) || ch.questions[0];
     if (id === 1) {
       primeIslandAudio();
       void playPrologueNarration(0);
@@ -121,7 +139,7 @@ export default function App() {
   };
 
   const requestAiProfile = async (finalAnswers) => {
-    setGenerationStatus("正在连接 DeepSeek，为你整理关系画像……");
+    setGenerationStatus("Lovera 正在根据你的十四个选择整理关系画像……");
     setScreen("generating");
 
     try {
@@ -140,6 +158,7 @@ export default function App() {
       setAiProfile(payload.profile);
       persist({ answers: finalAnswers, profile: payload.profile });
       setResultTab(0);
+      setResultView("cover");
       setScreen("result");
       if (payload.warning) showToast(payload.warning);
     } catch {
@@ -151,6 +170,7 @@ export default function App() {
       setAiProfile(fallbackProfile);
       persist({ answers: finalAnswers, profile: fallbackProfile });
       setResultTab(0);
+      setResultView("cover");
       setScreen("result");
       showToast("网络暂时不可用，已使用本地规则库生成结果");
     }
@@ -185,6 +205,7 @@ export default function App() {
           ...prev,
           {
             role: "lora",
+            time: currentChatTime(),
             text:
               qid === 4
                 ? "洞穴里那一阵沉默，我都记得。你选的方式，我会学着靠近。"
@@ -196,18 +217,10 @@ export default function App() {
       });
     }
 
-    if (chapterId === 7) {
-      void requestAiProfile(currentAnswers);
-      return;
-    }
-
-    const nextChapterData = CHAPTERS.find((chapter) => chapter.id === nextChapter);
-    const nextQuestion = nextChapterData.questions.find((questionId) => !currentAnswers[`Q${questionId}`])
-      || nextChapterData.questions[0];
-    setChapterId(nextChapter);
-    setQid(nextQuestion);
-    setLastAnswerText("");
-    setScreen("question");
+    stopLoveraNarration();
+    stopIslandAmbience();
+    setChapterTransitionKey(chapterId === 7 ? "7-ending" : `${chapterId}-${nextChapter}`);
+    setScreen("chapter-transition");
   };
 
   const choose = (key, text) => {
@@ -219,13 +232,62 @@ export default function App() {
     advanceJourney(next);
   };
 
-  const sendChat = () => {
-    const text = draft.trim() || "感觉有些选项真的很难选……但很准的！";
-    const reply = loraReply(text, doneCount);
-    const next = [...messages, { role: "me", text }, { role: "lora", text: reply }];
-    setMessages(next);
+  const finishChapterTransition = () => {
+    if (chapterTransitionKey === "7-ending") {
+      void requestAiProfile(answers);
+      return;
+    }
+
+    const nextChapterId = Number(chapterTransitionKey.split("-")[1]) || 2;
+    const nextChapter = CHAPTERS.find((chapter) => chapter.id === nextChapterId);
+    const nextQuestion = nextChapterId === 3
+      ? nextChapter.questions[0]
+      : nextChapter.questions.find((questionId) => !answers[`Q${questionId}`])
+        || nextChapter.questions[0];
+    setChapterId(nextChapterId);
+    setQid(nextQuestion);
+    setLastAnswerText("");
+    setScreen("question");
+  };
+
+  const sendChat = async () => {
+    const text = draft.trim();
+    if (!text || chatLoading) return;
+
+    const userMessage = { role: "me", text, time: currentChatTime() };
+    const messagesWithUser = [...messages, userMessage];
+    setMessages(messagesWithUser);
     setDraft("");
-    persist({ messages: next });
+    setChatLoading(true);
+    persist({ messages: messagesWithUser });
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: messagesWithUser.slice(-14), answers }),
+        signal: AbortSignal.timeout(26000),
+      });
+      const payload = await response.json();
+      if (!response.ok || !payload.reply) throw new Error(payload.error || "回复失败");
+
+      const nextMessages = [
+        ...messagesWithUser,
+        { role: "lora", text: payload.reply, time: currentChatTime() },
+      ];
+      setMessages(nextMessages);
+      persist({ messages: nextMessages });
+    } catch {
+      const nextMessages = [
+        ...messagesWithUser,
+        { role: "lora", text: loraReply(text, doneCount), time: currentChatTime() },
+      ];
+      setMessages(nextMessages);
+      persist({ messages: nextMessages });
+      showToast("Lovera 暂时没听清，先陪你说一句心里话");
+    } finally {
+      setChatLoading(false);
+    }
   };
 
   const share = async () => {
@@ -252,6 +314,7 @@ export default function App() {
       void requestAiProfile(answers);
       return;
     }
+    if (tab === 0) setResultView("cover");
     goResult(tab);
   };
 
@@ -306,6 +369,14 @@ export default function App() {
         lastAnswerText={lastAnswerText}
       />
     );
+  } else if (screen === "chapter-transition") {
+    body = (
+      <ChapterTransitionVideo
+        key={chapterTransitionKey}
+        transitionKey={chapterTransitionKey}
+        onComplete={finishChapterTransition}
+      />
+    );
   } else if (screen === "puzzle") {
     body = (
       <PuzzleScreen
@@ -322,12 +393,16 @@ export default function App() {
         setDraft={setDraft}
         onBack={() => (doneCount === 14 ? openCompletedResult(0) : setScreen("map"))}
         onSend={sendChat}
+        isReplying={chatLoading}
       />
     );
   } else if (screen === "generating") {
     body = <Generating status={generationStatus} />;
   } else if (screen === "manual" && profile) {
-    body = <ManualScreen profile={profile} onBack={() => goResult(1)} />;
+    body = <ManualScreen profile={profile} onBack={() => {
+      setResultView("poem");
+      goResult(0);
+    }} />;
   } else if (screen === "result" && profile) {
     const common = {
       profile,
@@ -335,7 +410,17 @@ export default function App() {
       onNext: () => cycleTab(1),
       onPrev: () => cycleTab(-1),
     };
-    if (resultTab === 0) body = <PersonalityResult {...common} onDetails={() => setScreen("manual")} />;
+    if (resultTab === 0) {
+      body = (
+        <PersonalityResult
+          profile={profile}
+          view={resultView}
+          onBack={() => (resultView === "poem" ? setResultView("cover") : setScreen("map"))}
+          onOpenPoem={() => setResultView("poem")}
+          onDetails={() => setScreen("manual")}
+        />
+      );
+    }
     else if (resultTab === 1) {
       body = <PartnerTraits {...common} onDetails={() => setScreen("manual")} />;
     } else if (resultTab === 2) {
@@ -358,6 +443,18 @@ export default function App() {
           className={`phone-screen ${
             screen === "welcome"
               ? "theme-welcome"
+              : screen === "map"
+                ? "theme-map"
+              : screen === "generating"
+                ? "theme-generating"
+              : screen === "chat"
+                ? "theme-chat"
+              : screen === "chapter-transition"
+                ? "theme-transition"
+              : screen === "result" && resultTab === 0
+                ? "theme-poem-result"
+              : screen === "manual"
+                ? "theme-manual"
               : screen === "puzzle"
                 ? "theme-puzzle"
               : screen === "intro"
