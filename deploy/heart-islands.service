@@ -1,0 +1,20 @@
+[Unit]
+Description=Heart Islands web application
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/apps/heart-islands
+Environment=NODE_ENV=production
+ExecStart=/home/ubuntu/apps/heart-islands/node_modules/.bin/wrangler dev --config dist/heart_islands/wrangler.json --ip 127.0.0.1 --port 4173
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

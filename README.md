@@ -7,7 +7,7 @@
 与星灵旅伴 **Lovera** 一起穿越七座心之群岛，<br />
 让十四次带着情境与情绪的选择，慢慢拼出属于你的关系画像。
 
-[立即体验 Heart Islands](https://heart-islands-lovera.tutanglien5.chatgpt.site)
+[立即体验 Heart Islands](https://heart-islands-lovera.tutanglien5.chatgpt.site) · [GitHub Pages 备用入口](https://123daved.github.io/my-work/)
 
 </div>
 
@@ -116,7 +116,7 @@ Lovera 不是冷冰冰的出题人。它会与你站在同一个故事空间里�
 - 我希望别人怎样理解我？
 - 下一次遇到相似的关系时刻，我是否能更清楚地表达自己？
 
-> [进入公开体验](https://heart-islands-lovera.tutanglien5.chatgpt.site) · 支持手机与桌面浏览器
+> [进入公开体验](https://heart-islands-lovera.tutanglien5.chatgpt.site) · [GitHub Pages 备用入口](https://123daved.github.io/my-work/) · 支持手机与桌面浏览器
 
 ## 5. 产品哲学
 

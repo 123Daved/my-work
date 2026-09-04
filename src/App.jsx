@@ -466,10 +466,6 @@ export default function App() {
                 : ""
           }`}
         >
-          <div className="status-bar">
-            <span>9:41</span>
-            <span>♥︎ 心之群岛</span>
-          </div>
           {body}
           {toast && <div className="toast">{toast}</div>}
         </div>

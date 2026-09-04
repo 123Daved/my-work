@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && node scripts/prepare-sites-build.mjs",
+    "build:cloud": "vite build",
+    "build:pages": "vite build --mode github-pages --base=/my-work/ --outDir=dist-pages",
     "preview": "vite preview"
   },
   "dependencies": {

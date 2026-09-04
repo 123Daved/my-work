@@ -4,6 +4,7 @@ import { createProfileMiddleware } from "./server/deepseek.js";
 import { createLoveraChatMiddleware } from "./server/lovera-chat.js";
 
 export default defineConfig(async ({ command, mode }) => {
+  const isGitHubPages = mode === "github-pages";
   const env = command === "serve" ? loadEnv(mode, process.cwd(), "") : {};
   const profileMiddleware = createProfileMiddleware({
     apiKey: env.DEEPSEEK_API_KEY,
@@ -25,11 +26,15 @@ export default defineConfig(async ({ command, mode }) => {
     },
   };
 
-  const { cloudflare } = await import("@cloudflare/vite-plugin");
+  const deploymentPlugins = [];
+  if (!isGitHubPages) {
+    const { cloudflare } = await import("@cloudflare/vite-plugin");
+    deploymentPlugins.push(cloudflare());
+  }
 
   return {
     envDir: command === "serve" ? process.cwd() : "./scripts/empty-env",
-    plugins: [react(), deepseekPlugin, cloudflare()],
+    plugins: [react(), deepseekPlugin, ...deploymentPlugins],
     server: {
       host: true,
       port: 5173,
