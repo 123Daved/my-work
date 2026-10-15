@@ -33,7 +33,7 @@ export default defineConfig(async ({ command, mode }) => {
   return {
     define: {
       "import.meta.env.VITE_API_BASE_URL": JSON.stringify(isGitHubPages
-        ? "https://heart-islands-lovera.tutanglien5.chatgpt.site"
+        ? "https://heart-islands-lovera.sharp-tapir-4242.chatgpt.site"
         : ""),
     },
     envDir: command === "serve" ? process.cwd() : "./scripts/empty-env",
