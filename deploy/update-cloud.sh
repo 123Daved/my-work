@@ -40,10 +40,12 @@ printf '\n'
 [[ "$HEART_ISLANDS_KEY" == sk-* ]] || { echo 'Invalid key format; current service was not changed.'; exit 1; }
 export HEART_ISLANDS_KEY
 node --input-type=module <<'JS'
-import { writeFileSync } from 'node:fs';
+import { chmodSync, writeFileSync } from 'node:fs';
 const content = `DEEPSEEK_API_KEY=${process.env.HEART_ISLANDS_KEY}\n`;
 writeFileSync('dist/heart_islands/.dev.vars', content, { mode: 0o600 });
 writeFileSync('.env.local', content, { mode: 0o600 });
+chmodSync('dist/heart_islands/.dev.vars', 0o600);
+chmodSync('.env.local', 0o600);
 JS
 unset HEART_ISLANDS_KEY
 
