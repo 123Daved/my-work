@@ -157,6 +157,16 @@ npm run dev
 
 在 `.env.local` 中填写服务端 `DEEPSEEK_API_KEY`。密钥不会进入前端构建，也不应提交到 GitHub。
 
+关系画像与 Lovera 对话统一使用 `deepseek-flash`，关闭思考模式；旧的模型环境变量不会切换到其他模型。
+
+三处部署共用 `src/index.css` 和同一套手机端界面（动态视口高度、刘海屏安全区、小屏布局、聊天输入框适配）。
+
+- Sites：运行 `npm run build`，发布 Worker 与静态资源，并在 Sites 服务端环境变量中设置 secret `DEEPSEEK_API_KEY`。更新密钥后需重新部署版本才能生效。
+- 云服务器：运行 `npm run build:cloud`，沿用 `deploy/heart-islands.service`。在服务使用的 Wrangler 配置目录 `dist/heart_islands/` 中单独配置不入库的 `.dev.vars`（`DEEPSEEK_API_KEY=...`），更新构建时保留该文件，然后重启服务。
+- GitHub Pages：运行 `npm run build:pages`，将 `dist-pages/` 内容发布到 `gh-pages` 分支根目录。资源路径使用 `/my-work/`，AI 请求访问现有 Sites 的 HTTPS API；必须先发布支持 `https://123daved.github.io` 跨域请求的新版后端。GitHub Pages 本身不保存密钥、不运行 AI 后端。
+
+运行 `npm test` 检查 Flash 模型约束、跨域预检、错误响应和本地兜底。`/api/health` 只表示密钥已配置，不证明密钥有效；部署后还需使用测试消息验证 `/api/chat`、使用测试答案验证 `/api/profile` 的 `source` 为 `deepseek`。
+
 ## 生产构建
 
 ```bash

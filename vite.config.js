@@ -8,11 +8,9 @@ export default defineConfig(async ({ command, mode }) => {
   const env = command === "serve" ? loadEnv(mode, process.cwd(), "") : {};
   const profileMiddleware = createProfileMiddleware({
     apiKey: env.DEEPSEEK_API_KEY,
-    model: env.DEEPSEEK_MODEL || "deepseek-v4-flash",
   });
   const loveraChatMiddleware = createLoveraChatMiddleware({
     apiKey: env.DEEPSEEK_API_KEY,
-    model: env.DEEPSEEK_CHAT_MODEL || env.DEEPSEEK_MODEL || "deepseek-v4-flash",
   });
   const deepseekPlugin = {
     name: "heart-islands-deepseek-profile",
@@ -33,6 +31,11 @@ export default defineConfig(async ({ command, mode }) => {
   }
 
   return {
+    define: {
+      "import.meta.env.VITE_API_BASE_URL": JSON.stringify(isGitHubPages
+        ? "https://heart-islands-lovera.tutanglien5.chatgpt.site"
+        : ""),
+    },
     envDir: command === "serve" ? process.cwd() : "./scripts/empty-env",
     plugins: [react(), deepseekPlugin, ...deploymentPlugins],
     server: {

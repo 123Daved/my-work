@@ -1,5 +1,8 @@
 import { generateProfilePayload } from "./deepseek.js";
 import { generateLoveraChatPayload } from "./lovera-chat.js";
+import { DEEPSEEK_MODEL } from "./deepseek-config.js";
+
+const GITHUB_PAGES_ORIGIN = "https://123daved.github.io";
 
 const RATE_LIMITS = {
   "/api/profile": { limit: 8, windowMs: 60_000 },
@@ -64,12 +67,37 @@ function rateLimitResponse(request, pathname) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (!url.pathname.startsWith("/api/")) return env.ASSETS.fetch(request);
+    const origin = request.headers.get("Origin");
+    const allowedOrigin = origin === GITHUB_PAGES_ORIGIN || origin === url.origin;
+    if (origin && !allowedOrigin) {
+      return jsonResponse(403, { error: "Origin not allowed" });
+    }
+    const corsHeaders = allowedOrigin ? {
+      "Access-Control-Allow-Origin": origin,
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Max-Age": "600",
+      Vary: "Origin",
+    } : {};
+    if (request.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: corsHeaders });
+    }
+    const response = await handleApiRequest(request, env);
+    for (const [key, value] of Object.entries(corsHeaders)) response.headers.set(key, value);
+    return response;
+  },
+};
+
+async function handleApiRequest(request, env) {
+    const url = new URL(request.url);
     const pathname = url.pathname;
 
     if (pathname === "/api/health") {
       return jsonResponse(200, {
         ok: true,
         deepseekConfigured: Boolean(env.DEEPSEEK_API_KEY),
+        model: DEEPSEEK_MODEL,
       });
     }
 
@@ -87,7 +115,6 @@ export default {
           const result = await generateProfilePayload({
             answers: body.answers,
             apiKey: env.DEEPSEEK_API_KEY,
-            model: env.DEEPSEEK_MODEL || "deepseek-v4-flash",
           });
           return jsonResponse(result.status, result.body);
         }
@@ -95,7 +122,6 @@ export default {
         const result = await generateLoveraChatPayload({
           body,
           apiKey: env.DEEPSEEK_API_KEY,
-          model: env.DEEPSEEK_CHAT_MODEL || env.DEEPSEEK_MODEL || "deepseek-v4-flash",
         });
         return jsonResponse(result.status, result.body);
       } catch (error) {
@@ -103,6 +129,5 @@ export default {
       }
     }
 
-    return env.ASSETS.fetch(request);
-  },
-};
+    return jsonResponse(404, { error: "API not found" });
+}

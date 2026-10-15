@@ -1,7 +1,7 @@
 import { interpret } from "../src/engine/interpreter.js";
 import { PROFILE_SKILL_VERSION, PROFILE_SYSTEM_PROMPT, buildProfilePrompt } from "./profile-skill.js";
 
-const DEEPSEEK_URL = "https://api.deepseek.com/chat/completions";
+import { DEEPSEEK_MODEL, DEEPSEEK_URL } from "./deepseek-config.js";
 const ANSWER_KEYS = Array.from({ length: 14 }, (_, index) => `Q${index + 1}`);
 const BLOCK_TYPES = new Set(["opening", "core_longing", "relationship_need", "tension", "red_line", "growth_edge", "closing"]);
 const EMPHASIS_TYPES = new Set(["normal", "soft", "accent", "hero"]);
@@ -165,12 +165,12 @@ function mergeAiResult(baseProfile, candidate, answers) {
     ...poem,
     shareLine: `${modules.name}：${insightProfile.core_longing.summary}`,
     generatedBy: "deepseek",
-    model: "deepseek-v4-flash",
+    model: DEEPSEEK_MODEL,
     profileVersion: PROFILE_SKILL_VERSION,
   };
 }
 
-async function callDeepSeek({ answers, baseProfile, apiKey, model }) {
+async function callDeepSeek({ answers, baseProfile, apiKey }) {
   const response = await fetch(DEEPSEEK_URL, {
     method: "POST",
     headers: {
@@ -178,7 +178,7 @@ async function callDeepSeek({ answers, baseProfile, apiKey, model }) {
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model,
+      model: DEEPSEEK_MODEL,
       messages: [
         { role: "system", content: PROFILE_SYSTEM_PROMPT },
         { role: "user", content: buildProfilePrompt(answers, baseProfile) },
@@ -237,7 +237,7 @@ function localFallback(baseProfile) {
   };
 }
 
-export async function generateProfilePayload({ answers, apiKey, model = "deepseek-v4-flash" }) {
+export async function generateProfilePayload({ answers, apiKey }) {
   if (!validateAnswers(answers)) {
     return { status: 400, body: { error: "需要提交完整的 14 道答案" } };
   }
@@ -258,7 +258,7 @@ export async function generateProfilePayload({ answers, apiKey, model = "deepsee
   }
 
   try {
-    const candidate = await callDeepSeek({ answers, baseProfile, apiKey, model });
+    const candidate = await callDeepSeek({ answers, baseProfile, apiKey });
     return {
       status: 200,
       body: {
@@ -281,7 +281,7 @@ export async function generateProfilePayload({ answers, apiKey, model = "deepsee
   }
 }
 
-export function createProfileMiddleware({ apiKey, model = "deepseek-v4-flash" }) {
+export function createProfileMiddleware({ apiKey }) {
   return async function profileMiddleware(req, res) {
     if (req.method !== "POST") {
       sendJson(res, 405, { error: "Method not allowed" });
@@ -290,7 +290,7 @@ export function createProfileMiddleware({ apiKey, model = "deepseek-v4-flash" })
 
     try {
       const { answers } = await readJson(req);
-      const result = await generateProfilePayload({ answers, apiKey, model });
+      const result = await generateProfilePayload({ answers, apiKey });
       sendJson(res, result.status, result.body);
     } catch (error) {
       sendJson(res, 400, { error: error.message || "请求格式错误" });

@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "test": "node --test server/api.test.js",
     "dev": "vite",
     "build": "vite build && node scripts/prepare-sites-build.mjs",
     "build:cloud": "vite build",

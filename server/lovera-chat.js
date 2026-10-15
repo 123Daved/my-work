@@ -1,6 +1,6 @@
 import { QUESTIONS } from "../src/data/story.js";
 
-const DEEPSEEK_URL = "https://api.deepseek.com/chat/completions";
+import { DEEPSEEK_MODEL, DEEPSEEK_URL } from "./deepseek-config.js";
 const VALID_ROLES = new Set(["me", "lora", "user", "assistant"]);
 
 export const LOVERA_SYSTEM_PROMPT = `
@@ -85,7 +85,7 @@ function buildJourneyContext(answers) {
   return `用户已经完成 ${choices.length}/14 个选择。以下内容只用于理解语境，不要逐条复述：\n${choices.join("\n")}`;
 }
 
-async function callLovera({ messages, answers, apiKey, model }) {
+async function callLovera({ messages, answers, apiKey }) {
   const response = await fetch(DEEPSEEK_URL, {
     method: "POST",
     headers: {
@@ -93,7 +93,7 @@ async function callLovera({ messages, answers, apiKey, model }) {
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model,
+      model: DEEPSEEK_MODEL,
       messages: [
         {
           role: "system",
@@ -116,7 +116,7 @@ async function callLovera({ messages, answers, apiKey, model }) {
   return reply;
 }
 
-export async function generateLoveraChatPayload({ body, apiKey, model = "deepseek-v4-flash" }) {
+export async function generateLoveraChatPayload({ body, apiKey }) {
   if (!apiKey) {
     return { status: 503, body: { error: "聊天服务暂时不可用" } };
   }
@@ -131,7 +131,6 @@ export async function generateLoveraChatPayload({ body, apiKey, model = "deepsee
       messages,
       answers: body?.answers,
       apiKey,
-      model,
     });
     return { status: 200, body: { reply } };
   } catch (error) {
@@ -140,7 +139,7 @@ export async function generateLoveraChatPayload({ body, apiKey, model = "deepsee
   }
 }
 
-export function createLoveraChatMiddleware({ apiKey, model = "deepseek-v4-flash" }) {
+export function createLoveraChatMiddleware({ apiKey }) {
   return async function loveraChatMiddleware(req, res) {
     if (req.method !== "POST") {
       sendJson(res, 405, { error: "Method not allowed" });
@@ -149,7 +148,7 @@ export function createLoveraChatMiddleware({ apiKey, model = "deepseek-v4-flash"
 
     try {
       const body = await readJson(req);
-      const result = await generateLoveraChatPayload({ body, apiKey, model });
+      const result = await generateLoveraChatPayload({ body, apiKey });
       sendJson(res, result.status, result.body);
     } catch (error) {
       console.error("Lovera chat failed:", error.message);

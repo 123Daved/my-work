@@ -8475,6 +8475,21 @@ button {
     padding-right: max(16px, env(safe-area-inset-right, 0px));
     padding-left: max(16px, env(safe-area-inset-left, 0px));
   }
+
+  /* Keep iOS from zooming the page when the chat composer is focused. */
+  .lovera-chat-screen .composer input {
+    font-size: 16px;
+  }
+
+  .lovera-chat-screen .chat-bubble p {
+    font-size: 14px;
+    overflow-wrap: anywhere;
+  }
+
+  .lovera-chat-screen .mic {
+    width: 44px;
+    height: 44px;
+  }
 }
 
 @media (max-height: 720px) {

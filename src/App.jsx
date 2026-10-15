@@ -25,6 +25,7 @@ import {
 } from "./screens.jsx";
 
 const STORAGE_KEY = "heart-islands-progress";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 const PROFILE_VERSION = 3;
 const CINEMATIC_QUESTION_IDS = new Set([1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14]);
 
@@ -143,7 +144,7 @@ export default function App() {
     setScreen("generating");
 
     try {
-      const response = await fetch("/api/profile", {
+      const response = await fetch(`${API_BASE_URL}/api/profile`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ answers: finalAnswers }),
@@ -262,7 +263,7 @@ export default function App() {
     persist({ messages: messagesWithUser });
 
     try {
-      const response = await fetch("/api/chat", {
+      const response = await fetch(`${API_BASE_URL}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: messagesWithUser.slice(-14), answers }),

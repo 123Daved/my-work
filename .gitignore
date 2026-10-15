@@ -6,3 +6,6 @@ dist-pages
 .env
 .env.local
 .env.*.local
+.dev.vars
+.dev.vars.*
+!.env.example
