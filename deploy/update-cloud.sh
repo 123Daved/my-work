@@ -10,9 +10,22 @@ test -d "$previous"
 sudo -n true
 release=$(mktemp -d /home/ubuntu/apps/heart-islands-release.XXXXXX)
 echo "Preparing release: $release"
-curl --fail --location --retry 2 --connect-timeout 15 --max-time 300 \
-  "https://codeload.github.com/123Daved/my-work/tar.gz/$commit" -o "$release/source.tar.gz"
-tar -xzf "$release/source.tar.gz" --strip-components=1 -C "$release"
+# This update changes code only. Reuse the existing media library locally so
+# a slow GitHub connection does not need to download 100 MB of unchanged media.
+tar -C "$previous" --exclude='./node_modules' --exclude='./dist' --exclude='./.git' -cf - . | tar -xf - -C "$release"
+files=(
+  .env.example .gitignore .openai/hosting.json README.md
+  package.json package-lock.json vite.config.js wrangler.jsonc index.html
+  scripts/prepare-sites-build.mjs scripts/empty-env/.gitkeep
+  server/deepseek-config.js server/api.test.js server/deepseek.js
+  server/lovera-chat.js server/worker.js server/profile-skill.js
+  src/App.jsx src/main.jsx src/screens.jsx src/index.css src/storm.css
+  src/data/story.js src/engine/interpreter.js src/engine/islandAudio.js src/ui/Mascot.jsx
+)
+for file in "${files[@]}"; do
+  curl --fail --silent --show-error --location --retry 2 --connect-timeout 15 --max-time 60 \
+    "https://raw.githubusercontent.com/123Daved/my-work/$commit/$file" --create-dirs -o "$release/$file"
+done
 cd "$release"
 if cmp -s package-lock.json "$previous/package-lock.json" && test -d "$previous/node_modules"; then
   ln -s "$previous/node_modules" node_modules
@@ -28,7 +41,9 @@ printf '\n'
 export HEART_ISLANDS_KEY
 node --input-type=module <<'JS'
 import { writeFileSync } from 'node:fs';
-writeFileSync('dist/heart_islands/.dev.vars', `DEEPSEEK_API_KEY=${process.env.HEART_ISLANDS_KEY}\n`, { mode: 0o600 });
+const content = `DEEPSEEK_API_KEY=${process.env.HEART_ISLANDS_KEY}\n`;
+writeFileSync('dist/heart_islands/.dev.vars', content, { mode: 0o600 });
+writeFileSync('.env.local', content, { mode: 0o600 });
 JS
 unset HEART_ISLANDS_KEY
 
