@@ -42,8 +42,7 @@ fi
 printf '[Service]\nWorkingDirectory=%s\nExecStart=\nExecStart=%s/node_modules/.bin/wrangler dev --config dist/heart_islands/wrangler.json --ip 127.0.0.1 --port 4173\n' \
   "$release" "$release" > "$release/release.conf"
 sudo install -m 644 "$release/release.conf" "$override"
-sudo systemctl daemon-reload
-sudo systemctl restart heart-islands
+if sudo systemctl daemon-reload && sudo systemctl restart heart-islands; then
 for attempt in {1..20}; do
   if curl -fsS --max-time 3 http://127.0.0.1:4173/api/health | node --input-type=module -e '
     let text=""; for await (const part of process.stdin) text+=part;
@@ -56,6 +55,7 @@ for attempt in {1..20}; do
   fi
   sleep 1
 done
+fi
 
 echo 'New release failed readiness checks; restoring the previous service configuration.'
 if "$had_override"; then
