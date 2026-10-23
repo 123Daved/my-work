@@ -1,12 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Run as ubuntu on the existing Heart Islands server. The API key is entered
-# without echo and never appears in command arguments or shell history.
+# Run as ubuntu. Pass --reuse-key for content-only updates: the current service's
+# runtime secret stays on the server and is never echoed or sent to GitHub.
 commit=${1:?Usage: bash update-cloud.sh FULL_GITHUB_COMMIT_SHA}
 [[ "$commit" =~ ^[0-9a-f]{40}$ ]] || { echo 'Expected a full commit SHA'; exit 1; }
-previous=/home/ubuntu/apps/heart-islands
+secret_mode=${2:---replace-key}
+[[ "$secret_mode" == --reuse-key || "$secret_mode" == --replace-key ]] || exit 1
+previous=$(systemctl show heart-islands --property=WorkingDirectory --value)
+[[ "$previous" =~ ^/home/ubuntu/apps/heart-islands(-release\.[[:alnum:]]+)?$ ]] || { echo 'Unexpected active release directory'; exit 1; }
 test -d "$previous"
+if [[ "$secret_mode" == --reuse-key ]]; then
+  test -s "$previous/dist/heart_islands/.dev.vars"
+fi
 sudo -n true
 release=$(mktemp -d /home/ubuntu/apps/heart-islands-release.XXXXXX)
 echo "Preparing release: $release"
@@ -58,6 +64,10 @@ fi
 npm test
 npm run build:cloud
 
+if [[ "$secret_mode" == --reuse-key ]]; then
+  install -m 600 "$previous/dist/heart_islands/.dev.vars" dist/heart_islands/.dev.vars
+  install -m 600 "$previous/dist/heart_islands/.dev.vars" .env.local
+else
 IFS= read -r -s -p 'New DeepSeek API key (hidden): ' HEART_ISLANDS_KEY </dev/tty
 printf '\n'
 [[ "$HEART_ISLANDS_KEY" == sk-* ]] || { echo 'Invalid key format; current service was not changed.'; exit 1; }
@@ -71,6 +81,7 @@ chmodSync('dist/heart_islands/.dev.vars', 0o600);
 chmodSync('.env.local', 0o600);
 JS
 unset HEART_ISLANDS_KEY
+fi
 
 override=/etc/systemd/system/heart-islands.service.d/20-release.conf
 sudo install -d -m 755 /etc/systemd/system/heart-islands.service.d
