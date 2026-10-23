@@ -6,13 +6,13 @@
 .phone-screen.theme-question-q8 {
   background:
     linear-gradient(180deg, #402b5b05, #4e325e08 47%, #2e1b3f78),
-    url("./assets/q8-storm-fork-bg.png") center 48% / cover no-repeat;
+    url("./assets/optimized/q8-storm-fork-bg.webp") center 48% / cover no-repeat;
 }
 
 .phone-screen.theme-question-q9 {
   background:
     linear-gradient(180deg, #40285608, #4d2c520a 44%, #2b193b80),
-    url("./assets/q9-repair-cave-bg.png") center 55% / cover no-repeat;
+    url("./assets/optimized/q9-repair-cave-bg.webp") center 55% / cover no-repeat;
 }
 
 .phone-screen.theme-question-q8 .status-bar,

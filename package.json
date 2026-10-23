@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "test": "node --test server/api.test.js",
+    "test": "node --test server/api.test.js scripts/media.test.js",
+    "media:optimize": "node scripts/optimize-media.mjs",
     "dev": "vite",
     "build": "vite build && node scripts/prepare-sites-build.mjs",
     "build:cloud": "vite build",

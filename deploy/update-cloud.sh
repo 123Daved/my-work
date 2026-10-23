@@ -10,13 +10,13 @@ test -d "$previous"
 sudo -n true
 release=$(mktemp -d /home/ubuntu/apps/heart-islands-release.XXXXXX)
 echo "Preparing release: $release"
-# This update changes code only. Reuse the existing media library locally so
-# a slow GitHub connection does not need to download 100 MB of unchanged media.
+# Reuse unchanged original media, then fetch the smaller optimized variants below.
 tar -C "$previous" --exclude='./node_modules' --exclude='./dist' --exclude='./.git' -cf - . | tar -xf - -C "$release"
 files=(
   .env.example .gitignore .openai/hosting.json README.md
   package.json package-lock.json vite.config.js wrangler.jsonc index.html
   scripts/prepare-sites-build.mjs scripts/empty-env/.gitkeep
+  scripts/media.test.js scripts/optimize-media.mjs src/assets/optimized/manifest.json
   server/deepseek-config.js server/api.test.js server/deepseek.js
   server/lovera-chat.js server/worker.js server/profile-skill.js
   src/App.jsx src/main.jsx src/screens.jsx src/index.css src/storm.css
@@ -27,6 +27,29 @@ for file in "${files[@]}"; do
     "https://raw.githubusercontent.com/123Daved/my-work/$commit/$file" --create-dirs -o "$release/$file"
 done
 cd "$release"
+HEART_ISLANDS_COMMIT="$commit" node --input-type=module <<'JS'
+import { readFile, mkdir, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { dirname } from 'node:path';
+const { entries } = JSON.parse(await readFile('src/assets/optimized/manifest.json', 'utf8'));
+const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
+let next = 0;
+await Promise.all(Array.from({ length: 4 }, async () => {
+  while (next < entries.length) {
+    const entry = entries[next++];
+    if (!/^optimized\/(?:audio\/|video\/)?[a-z0-9-]+\.(webp|m4a|mp4)$/.test(entry.output)) throw new Error('Invalid media path');
+    const path = `src/assets/${entry.output}`;
+    try { if (hash(await readFile(path)) === entry.outputSha256) continue; } catch {}
+    const response = await fetch(`https://raw.githubusercontent.com/123Daved/my-work/${process.env.HEART_ISLANDS_COMMIT}/${path}`, { signal: AbortSignal.timeout(120000) });
+    if (!response.ok) throw new Error(`Media download failed: ${path} ${response.status}`);
+    const bytes = Buffer.from(await response.arrayBuffer());
+    if (hash(bytes) !== entry.outputSha256) throw new Error(`Media checksum mismatch: ${path}`);
+    await mkdir(dirname(path), { recursive: true });
+    await writeFile(path, bytes);
+  }
+}));
+console.log('Optimized media verified.');
+JS
 if cmp -s package-lock.json "$previous/package-lock.json" && test -d "$previous/node_modules"; then
   ln -s "$previous/node_modules" node_modules
 else

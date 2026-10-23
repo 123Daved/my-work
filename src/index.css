@@ -101,7 +101,7 @@ button {
 .phone-screen.theme-welcome {
   background:
     linear-gradient(180deg, rgba(255, 230, 209, 0.04) 0%, rgba(255, 225, 198, 0.04) 58%, rgba(111, 65, 35, 0.1) 100%),
-    url("./assets/welcome-sky-islands.png") center / cover no-repeat;
+    url("./assets/optimized/welcome-sky-islands.webp") center / cover no-repeat;
 }
 
 .phone-screen.theme-welcome .status-bar {
@@ -114,7 +114,7 @@ button {
 .phone-screen.theme-puzzle {
   background:
     linear-gradient(180deg, rgba(255, 247, 232, 0.16), rgba(255, 225, 194, 0.12) 55%, rgba(229, 159, 96, 0.18)),
-    url("./assets/welcome-sky-islands.png") center / cover no-repeat;
+    url("./assets/optimized/welcome-sky-islands.webp") center / cover no-repeat;
 }
 
 .phone-screen.theme-puzzle .status-bar {
@@ -506,7 +506,7 @@ button {
 .phone-screen.theme-prologue {
   background:
     linear-gradient(180deg, rgba(58, 45, 81, 0.16) 0%, rgba(255, 225, 205, 0.05) 46%, rgba(73, 50, 70, 0.42) 100%),
-    url("./assets/heart-island-question-bg.png") center / cover no-repeat;
+    url("./assets/optimized/heart-island-question-bg.webp") center / cover no-repeat;
   transition: background 0.35s ease;
 }
 
@@ -518,7 +518,7 @@ button {
 .phone-screen.theme-question-1 {
   background:
     linear-gradient(180deg, rgba(255, 247, 240, 0.22) 0%, rgba(253, 226, 210, 0.48) 58%, rgba(246, 198, 167, 0.72) 100%),
-    url("./assets/heart-island-question-bg.png") center / cover no-repeat;
+    url("./assets/optimized/heart-island-question-bg.webp") center / cover no-repeat;
 }
 
 .phone-screen.theme-question-1 .status-bar {
@@ -527,16 +527,16 @@ button {
 }
 
 .phone-screen.theme-question-q1 {
-  background: url("./assets/q1-firefly-meadow-bg.png") center / cover no-repeat;
+  background: url("./assets/optimized/q1-firefly-meadow-bg.webp") center / cover no-repeat;
 }
 
 .phone-screen.theme-question-q2 {
-  background: url("./assets/q2-cloud-bridge-bg.png") center / cover no-repeat;
+  background: url("./assets/optimized/q2-cloud-bridge-bg.webp") center / cover no-repeat;
 }
 
 .phone-screen.theme-question-q3,
 .phone-screen.theme-question-q4 {
-  background: url("./assets/echo-cave-question-bg.png") center / cover no-repeat;
+  background: url("./assets/optimized/echo-cave-question-bg.webp") center / cover no-repeat;
 }
 
 .phone-screen.theme-question-q3 .status-bar,
@@ -547,31 +547,31 @@ button {
 .phone-screen.theme-question-q5 {
   background:
     linear-gradient(180deg, rgba(89, 58, 104, 0.08), rgba(255, 214, 181, 0.1) 52%, rgba(61, 39, 76, 0.34)),
-    url("./assets/q5-tree-rest-bg.png") center / cover no-repeat;
+    url("./assets/optimized/q5-tree-rest-bg.webp") center / cover no-repeat;
 }
 
 .phone-screen.theme-question-q6 {
   background:
     linear-gradient(180deg, rgba(255, 232, 190, 0.08), rgba(197, 125, 55, 0.13) 58%, rgba(103, 62, 45, 0.3)),
-    url("./assets/q6-star-vault-bg.png") center / cover no-repeat;
+    url("./assets/optimized/q6-star-vault-bg.webp") center / cover no-repeat;
 }
 
 .phone-screen.theme-question-q7 {
   background:
     linear-gradient(180deg, rgba(255, 232, 190, 0.08), rgba(197, 125, 55, 0.13) 58%, rgba(103, 62, 45, 0.3)),
-    url("./assets/q6-star-vault-bg.png") center / cover no-repeat;
+    url("./assets/optimized/q6-star-vault-bg.webp") center / cover no-repeat;
 }
 
 .phone-screen.theme-question-q10 {
   background:
     linear-gradient(180deg, rgba(35, 31, 68, 0.2), rgba(210, 163, 190, 0.08) 54%, rgba(42, 31, 66, 0.42)),
-    url("./assets/q10-mirror-lake-bg.png") center 48% / cover no-repeat;
+    url("./assets/optimized/q10-mirror-lake-bg.webp") center 48% / cover no-repeat;
 }
 
 .phone-screen.theme-question-q11 {
   background:
     linear-gradient(180deg, rgba(34, 32, 84, 0.16), rgba(214, 169, 199, 0.06) 52%, rgba(42, 34, 75, 0.4)),
-    url("./assets/q11-moon-back-bg.png") center 48% / cover no-repeat;
+    url("./assets/optimized/q11-moon-back-bg.webp") center 48% / cover no-repeat;
 }
 
 .phone-screen.theme-question-q10 .status-bar,
@@ -584,7 +584,7 @@ button {
 .phone-screen.theme-question-q13 {
   background:
     linear-gradient(180deg, rgba(105, 77, 125, 0.08), rgba(255, 224, 210, 0.05) 50%, rgba(84, 57, 91, 0.34)),
-    url("./assets/q12-q13-promise-islands-bg.png") center 48% / cover no-repeat;
+    url("./assets/optimized/q12-q13-promise-islands-bg.webp") center 48% / cover no-repeat;
 }
 
 .phone-screen.theme-question-q12 .status-bar,
@@ -596,7 +596,7 @@ button {
 .phone-screen.theme-question-q14 {
   background:
     linear-gradient(180deg, rgba(255, 246, 239, 0.08), rgba(245, 207, 209, 0.09) 54%, rgba(108, 77, 116, 0.28)),
-    url("./assets/q14-future-land-bg.png") center 48% / cover no-repeat;
+    url("./assets/optimized/q14-future-land-bg.webp") center 48% / cover no-repeat;
 }
 
 .phone-screen.theme-question-q14 .status-bar {
@@ -607,7 +607,7 @@ button {
 .phone-screen.theme-poem-result {
   background:
     linear-gradient(180deg, rgba(98, 104, 135, 0.22), rgba(232, 207, 213, 0.16) 48%, rgba(245, 199, 169, 0.34)),
-    url("./assets/welcome-sky-islands.png") center / cover no-repeat;
+    url("./assets/optimized/welcome-sky-islands.webp") center / cover no-repeat;
 }
 
 .phone-screen.theme-poem-result .status-bar {
@@ -618,7 +618,7 @@ button {
 .phone-screen.theme-manual {
   background:
     linear-gradient(180deg, rgba(255, 241, 224, 0.56), rgba(227, 211, 226, 0.3) 48%, rgba(246, 202, 173, 0.48)),
-    url("./assets/welcome-sky-islands.png") center / cover no-repeat;
+    url("./assets/optimized/welcome-sky-islands.webp") center / cover no-repeat;
 }
 
 .phone-screen.theme-manual .status-bar {
@@ -631,7 +631,7 @@ button {
 .phone-screen.theme-chat {
   background:
     linear-gradient(180deg, rgba(255, 247, 239, 0.58), rgba(255, 226, 207, 0.28) 52%, rgba(244, 188, 151, 0.34)),
-    url("./assets/welcome-sky-islands.png") center / cover no-repeat;
+    url("./assets/optimized/welcome-sky-islands.webp") center / cover no-repeat;
 }
 
 .phone-screen.theme-map .status-bar,
@@ -644,7 +644,7 @@ button {
 .phone-screen.theme-question-2 {
   background:
     linear-gradient(180deg, rgba(12, 9, 24, 0.22), rgba(24, 18, 37, 0.38) 58%, rgba(13, 10, 24, 0.58)),
-    url("./assets/echo-cave-question-bg.png") center / cover no-repeat;
+    url("./assets/optimized/echo-cave-question-bg.webp") center / cover no-repeat;
 }
 
 .phone-screen.theme-question-2 .status-bar {
@@ -5055,13 +5055,13 @@ button {
 .question-chapter-1 .question-scene-card {
   background:
     linear-gradient(180deg, rgba(92, 71, 122, 0.08) 0%, rgba(255, 222, 197, 0.18) 54%, rgba(84, 59, 83, 0.32) 100%),
-    url("./assets/heart-island-question-bg.png") center 54% / cover no-repeat;
+    url("./assets/optimized/heart-island-question-bg.webp") center 54% / cover no-repeat;
 }
 
 .question-chapter-2 .question-scene-card {
   background:
     linear-gradient(180deg, rgba(11, 9, 22, 0.05) 0%, rgba(17, 13, 29, 0.1) 54%, rgba(22, 15, 34, 0.28) 100%),
-    url("./assets/echo-cave-question-bg.png") center 54% / cover no-repeat;
+    url("./assets/optimized/echo-cave-question-bg.webp") center 54% / cover no-repeat;
 }
 
 .question-chapter-3 .question-scroll {

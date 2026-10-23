@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { BackIcon, CloseIcon, Mascot, ShareIcon, StarEmblem } from "./ui/Mascot.jsx";
 import { CHAPTERS, PETALS, QUESTIONS, getQ7Scene } from "./data/story.js";
-import userPurpleFluffy from "./assets/user-purple-fluffy.png";
-import loraWavingFluffy from "./assets/lora-waving-fluffy.png";
-import chapterOneToTwoVideo from "./assets/video/chapter-1-to-2.mp4";
-import chapterTwoToThreeVideo from "./assets/video/chapter-2-to-3.mp4";
-import chapterThreeToFourVideo from "./assets/video/chapter-3-to-4.mp4";
-import chapterFourToFiveVideo from "./assets/video/chapter-4-to-5.mp4";
-import chapterFiveToSixVideo from "./assets/video/chapter-5-to-6.mp4";
-import chapterSixToSevenVideo from "./assets/video/chapter-6-to-7.mp4";
-import chapterSevenEndingVideo from "./assets/video/chapter-7-ending.mp4";
+import userPurpleFluffy from "./assets/optimized/user-purple-fluffy.webp";
+import loraWavingFluffy from "./assets/optimized/lora-waving-fluffy.webp";
+import chapterOneToTwoVideo from "./assets/optimized/video/chapter-1-to-2.mp4";
+import chapterTwoToThreeVideo from "./assets/optimized/video/chapter-2-to-3.mp4";
+import chapterThreeToFourVideo from "./assets/optimized/video/chapter-3-to-4.mp4";
+import chapterFourToFiveVideo from "./assets/optimized/video/chapter-4-to-5.mp4";
+import chapterFiveToSixVideo from "./assets/optimized/video/chapter-5-to-6.mp4";
+import chapterSixToSevenVideo from "./assets/optimized/video/chapter-6-to-7.mp4";
+import chapterSevenEndingVideo from "./assets/optimized/video/chapter-7-ending.mp4";
 import {
   clearPrologueNarrationListener,
   getLoveraEncounterProgress,
@@ -83,6 +83,8 @@ export function Welcome({ hasProgress, onStart, onContinue }) {
         <div className="welcome-mascot-glow" aria-hidden="true" />
         <img
           className="welcome-mascot"
+          fetchPriority="high"
+          decoding="async"
           src={loraWavingFluffy}
           alt="毛茸茸的 Lovera 正在向你挥手"
           draggable="false"
@@ -541,7 +543,7 @@ function HeartIslandPrologue({ onBack, onDone, soundOn, onToggleSound }) {
         <div className="gateway-portal" aria-label="你和 Lovera 准备一起踏上心之旅">
           <span className="gateway-halo" aria-hidden="true" />
           <span className="gateway-heart" aria-hidden="true">♥</span>
-          <img className="gateway-player" src={userPurpleFluffy} alt="代表你的紫色毛球" draggable="false" />
+          <img decoding="async" className="gateway-player" src={userPurpleFluffy} alt="代表你的紫色毛球" draggable="false" />
           <div className="gateway-lovera"><Mascot mood="happy" size={104} /></div>
           <span className="gateway-ground" aria-hidden="true" />
         </div>
@@ -629,7 +631,7 @@ function HeartIslandPrologue({ onBack, onDone, soundOn, onToggleSound }) {
       <div className="prologue-companions" aria-label="你在浮岛上遇见抱着星星灯的 Lovera">
         <div className="prologue-traveler">
           <span className="wake-ring" aria-hidden="true" />
-          <img src={userPurpleFluffy} alt="代表你的紫色毛球" draggable="false" />
+          <img decoding="async" src={userPurpleFluffy} alt="代表你的紫色毛球" draggable="false" />
         </div>
         <div className={`prologue-lora ${phase === "dialogue" ? "is-speaking" : ""}`}>
           <span className="lora-warmth" aria-hidden="true" />
@@ -875,7 +877,7 @@ function Q1CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
             <div className="q1-wind-stream wind-two" />
             <span className="q1-story-star">★</span>
             <div className="q1-user-character">
-              <img src={userPurpleFluffy} alt="" draggable="false" />
+              <img decoding="async" src={userPurpleFluffy} alt="" draggable="false" />
             </div>
             <div className="q1-lovera-character">
               <Mascot mood="idle" size={98} />
@@ -1145,11 +1147,11 @@ function Q2CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
             <div className="q2-cloud-drift cloud-drift-two" />
             <div className="q2-bridge-glimmer" />
             <div className="q2-user-character">
-              <img src={userPurpleFluffy} alt="" draggable="false" />
+              <img decoding="async" src={userPurpleFluffy} alt="" draggable="false" />
             </div>
             <div className="q2-lovera-character">
               <Mascot mood="idle" size={96} />
-              <img className="q2-lovera-wave" src={loraWavingFluffy} alt="" draggable="false" />
+              <img decoding="async" className="q2-lovera-wave" src={loraWavingFluffy} alt="" draggable="false" />
               <span className="q2-waiting-spark">✦</span>
             </div>
             <div className="q2-closeness-glow"><span>♥</span></div>
@@ -1356,7 +1358,7 @@ function Q3CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
             <div className="cave-depth-vignette" />
             <div className="cave-crystal-glow crystal-left" />
             <div className="cave-crystal-glow crystal-right" />
-            <div className="cave-user-character"><img src={userPurpleFluffy} alt="" draggable="false" /></div>
+            <div className="cave-user-character"><img decoding="async" src={userPurpleFluffy} alt="" draggable="false" /></div>
             <div className="cave-lovera-character"><Mascot mood="worry" size={98} /></div>
             <div className="cave-voice-waves"><i /><i /><i /></div>
             <div className="cave-search-beam" />
@@ -1567,7 +1569,7 @@ function Q4CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
             <div className="cave-depth-vignette" />
             <div className="cave-fork fork-left" /><div className="cave-fork fork-right" />
             <div className="cave-silence-pulse"><i /><i /><i /></div>
-            <div className="cave-user-character"><img src={userPurpleFluffy} alt="" draggable="false" /></div>
+            <div className="cave-user-character"><img decoding="async" src={userPurpleFluffy} alt="" draggable="false" /></div>
             <div className="cave-lovera-character"><Mascot mood="worry" size={98} /></div>
             <div className="cave-return-light">✦</div>
             {phase === "silence" && <div className="cave-waiting-dots"><i /><i /><i /></div>}
@@ -1699,7 +1701,7 @@ function Q5CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
           <div className="resource-scene q5-scene" aria-hidden="true">
             <div className="q5-sunset-rays" />
             <div className="q5-falling-petals">{Array.from({ length: 8 }, (_, index) => <i key={index} />)}</div>
-            <div className="q5-user-character"><img src={userPurpleFluffy} alt="" draggable="false" /></div>
+            <div className="q5-user-character"><img decoding="async" src={userPurpleFluffy} alt="" draggable="false" /></div>
             <div className="q5-lovera-character"><Mascot mood="worry" size={100} /></div>
             <div className="q5-star-lamp">★</div>
             <div className="q5-energy-orb">✦</div>
@@ -1877,7 +1879,7 @@ function Q6CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
           </div>
           <div className="resource-scene q6-scene" aria-hidden="true">
             <div className="q6-gold-shimmer">{Array.from({ length: 12 }, (_, index) => <i key={index} />)}</div>
-            <div className="q6-user-character"><img src={userPurpleFluffy} alt="" draggable="false" /></div>
+            <div className="q6-user-character"><img decoding="async" src={userPurpleFluffy} alt="" draggable="false" /></div>
             <div className="q6-lovera-character"><Mascot mood="idle" size={96} /></div>
           </div>
           <div className={`resource-caption ${phase === "lovera" || phase === "question" ? "lovera-caption" : "narrator-caption"}`} aria-live="polite">
@@ -2024,7 +2026,7 @@ function Q8CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
             <div className="storm-petals">{Array.from({ length: 14 }, (_, index) => <i key={index} />)}</div>
             <div className="fork-label safe"><span>☀</span>安全 · 绕远</div>
             <div className="fork-label fast"><span>⚡</span>很快 · 风暴</div>
-            <div className="storm-user-character"><img src={userPurpleFluffy} alt="" draggable="false" /></div>
+            <div className="storm-user-character"><img decoding="async" src={userPurpleFluffy} alt="" draggable="false" /></div>
             <div className="storm-lovera-character"><Mascot mood={phase === "blame" ? "worry" : "idle"} size={98} /></div>
             <div className="storm-impact"><i>✦</i><i>✦</i><i>✦</i></div>
           </div>
@@ -2182,7 +2184,7 @@ function Q9CinematicQuestion({ answers, onClose, onChoose, soundOn, onToggleSoun
             <div className="q9-after-rain" />
             <div className="q9-user-character">
               {lastAnswerText && <div className="q9-choice-bubble">{lastAnswerText}</div>}
-              <img src={userPurpleFluffy} alt="" draggable="false" />
+              <img decoding="async" src={userPurpleFluffy} alt="" draggable="false" />
             </div>
             <div className="q9-lovera-character"><Mascot mood={branch === "A" ? "worry" : "idle"} size={98} /></div>
             <div className="q9-star-fruit">★</div>
@@ -2338,7 +2340,7 @@ function Q10CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
                 <b className="mirror-shard shard-one" /><b className="mirror-shard shard-two" /><b className="mirror-shard shard-three" />
               </div>
             ))}
-            <div className="q10-user-character"><img src={userPurpleFluffy} alt="" draggable="false" /></div>
+            <div className="q10-user-character"><img decoding="async" src={userPurpleFluffy} alt="" draggable="false" /></div>
             <div className="q10-lovera-character"><Mascot mood={phase === "futures" ? "worry" : "idle"} size={88} /></div>
           </div>
           <div className={`mirror-caption ${phase === "futures" ? "lovera-caption" : "narrator-caption"}`} aria-live="polite">
@@ -2459,7 +2461,7 @@ function Q11CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
             <div className="moon-stardust">{Array.from({ length: 9 }, (_, index) => <i key={index} />)}</div>
             <div className="moon-hanging-crystals"><i>◇</i><i>✦</i><i>◇</i></div>
             <div className="moon-seat-glow" />
-            <div className="q11-user-character"><img src={userPurpleFluffy} alt="" draggable="false" /></div>
+            <div className="q11-user-character"><img decoding="async" src={userPurpleFluffy} alt="" draggable="false" /></div>
             <div className="q11-lovera-character"><Mascot mood={phase === "lovera" || phase === "question" ? "worry" : "idle"} size={94} /></div>
             <div className="moon-connection-thread"><i /><i /><i /></div>
           </div>
@@ -2627,7 +2629,7 @@ function PromiseCinematicQuestion({ qid, onClose, onChoose, soundOn, onToggleSou
             <div className="promise-heart heart-right">♥</div>
             <div className="promise-link-thread"><i /><i /><i /></div>
             <div className="promise-guardian"><span>◉</span><i>守岛怪</i></div>
-            <div className="promise-user-character"><img src={userPurpleFluffy} alt="" draggable="false" /></div>
+            <div className="promise-user-character"><img decoding="async" src={userPurpleFluffy} alt="" draggable="false" /></div>
             <div className="promise-lovera-character"><Mascot mood={isLovera || qid === 13 ? "worry" : "idle"} size={92} /></div>
             <div className="promise-flying-star">✦<i /></div>
             <div className="promise-invitation"><span>✦</span><strong>云鲸岛</strong><small>守灯人邀请函</small></div>
@@ -2766,7 +2768,7 @@ function Q14CinematicQuestion({ onClose, onChoose, soundOn, onToggleSound }) {
             <div className="q14-flower-aura flower-wind"><i /><span>风铃</span></div>
             <div className="q14-flower-aura flower-together"><i /><span>共生</span></div>
             <div className="q14-guardian-focus"><i /><span>守门怪</span></div>
-            <div className="q14-user-character"><img src={userPurpleFluffy} alt="" draggable="false" /></div>
+            <div className="q14-user-character"><img decoding="async" src={userPurpleFluffy} alt="" draggable="false" /></div>
             <div className="q14-lovera-character"><Mascot mood="happy" size={76} /></div>
             <div className="q14-heart-thread"><i /><i /><i /></div>
           </div>
@@ -2973,7 +2975,7 @@ function StandardQuestionScreen({
             </div>
             <div className="user-in-scene">
               {lastAnswerText && <div className="user-answer-bubble">{lastAnswerText}</div>}
-              <img src={userPurpleFluffy} alt="代表你的紫色毛球" draggable="false" />
+              <img decoding="async" src={userPurpleFluffy} alt="代表你的紫色毛球" draggable="false" />
               <span>你</span>
             </div>
           </div>
@@ -3080,7 +3082,7 @@ export function PuzzleScreen({ answers, onBack, onShare }) {
 
         <div className="puzzle-center-companion">
           <span className="puzzle-center-halo" aria-hidden="true" />
-          <img src={loraWavingFluffy} alt="Lovera 陪你收集恋爱拼图" draggable="false" />
+          <img decoding="async" src={loraWavingFluffy} alt="Lovera 陪你收集恋爱拼图" draggable="false" />
           <span className="puzzle-center-label">陪你一起探索</span>
         </div>
 

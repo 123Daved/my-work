@@ -1,5 +1,5 @@
-import loraFluffy from "../assets/lora-fluffy.png";
-import loraFluffyBlink from "../assets/lora-fluffy-blink.png";
+import loraFluffy from "../assets/optimized/lora-fluffy.webp";
+import loraFluffyBlink from "../assets/optimized/lora-fluffy-blink.webp";
 
 export function Mascot({ mood = "idle", size = 140 }) {
   return (
@@ -10,8 +10,8 @@ export function Mascot({ mood = "idle", size = 140 }) {
       aria-label="毛绒小精灵 Lovera"
     >
       <span className="mascot-motion" aria-hidden="true">
-        <img className="mascot-image mascot-open-image" src={loraFluffy} alt="" draggable="false" />
-        <img className="mascot-image mascot-blink-image" src={loraFluffyBlink} alt="" draggable="false" />
+        <img decoding="async" className="mascot-image mascot-open-image" src={loraFluffy} alt="" draggable="false" />
+        <img decoding="async" className="mascot-image mascot-blink-image" src={loraFluffyBlink} alt="" draggable="false" />
       </span>
     </div>
   );

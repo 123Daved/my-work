@@ -65,7 +65,7 @@ const INITIAL_CHAT = [
 ];
 
 export default function App() {
-  const saved = loadState();
+  const [saved] = useState(loadState);
   const [screen, setScreen] = useState("welcome");
   const [answers, setAnswers] = useState(saved?.answers || {});
   const [unlocked, setUnlocked] = useState(saved?.unlocked || 1);
