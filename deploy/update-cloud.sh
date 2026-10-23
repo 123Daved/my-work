@@ -41,7 +41,7 @@ done
 fi
 cd "$release"
 HEART_ISLANDS_COMMIT="$commit" node --input-type=module <<'JS'
-import { readFile, mkdir, writeFile } from 'node:fs/promises';
+import { readFile, mkdir, rename } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { dirname } from 'node:path';
 import { execFile } from 'node:child_process';
@@ -56,11 +56,26 @@ await Promise.all(Array.from({ length: 4 }, async () => {
     if (!/^optimized\/(?:audio\/|video\/)?[a-z0-9-]+\.(webp|m4a|mp4)$/.test(entry.output)) throw new Error('Invalid media path');
     const path = `src/assets/${entry.output}`;
     try { if (hash(await readFile(path)) === entry.outputSha256) continue; } catch {}
-    // curl also honors the server's existing proxy/network configuration.
-    const { stdout: bytes } = await run('curl', ['--fail', '--silent', '--show-error', '--location', '--retry', '3', '--connect-timeout', '10', '--max-time', '120', `https://raw.githubusercontent.com/123Daved/my-work/${process.env.HEART_ISLANDS_COMMIT}/${path}`], { encoding: 'buffer', maxBuffer: 8 * 1024 * 1024 });
-    if (hash(bytes) !== entry.outputSha256) throw new Error(`Media checksum mismatch: ${path}`);
     await mkdir(dirname(path), { recursive: true });
-    await writeFile(path, bytes);
+    // Keep partial bytes across interrupted transfers. Retrying a curl response
+    // through stdout can concatenate partial and complete responses, corrupting it.
+    const partial = `${path}.part`;
+    let verified = false;
+    for (let attempt = 0; attempt < 20; attempt++) {
+      try {
+        await run('curl', ['--fail', '--silent', '--show-error', '--location', '--continue-at', '-', '--connect-timeout', '10', '--max-time', '30', '--output', partial, `https://raw.githubusercontent.com/123Daved/my-work/${process.env.HEART_ISLANDS_COMMIT}/${path}`]);
+      } catch { /* A later request resumes from the bytes already received. */ }
+      let bytes;
+      try { bytes = await readFile(partial); } catch { continue; }
+      if (hash(bytes) === entry.outputSha256) {
+        await rename(partial, path);
+        verified = true;
+        break;
+      }
+      if (bytes.length >= entry.bytes) throw new Error(`Media checksum mismatch: ${path}`);
+      console.log(`Partial ${path}: ${bytes.length}/${entry.bytes} bytes`);
+    }
+    if (!verified) throw new Error(`Media transfer incomplete; safe to resume: ${path}`);
     console.log(`Verified ${path}`);
   }
 }));
