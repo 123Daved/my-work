@@ -14,6 +14,12 @@ if [[ "$secret_mode" == --reuse-key ]]; then
   test -s "$previous/dist/heart_islands/.dev.vars"
 fi
 sudo -n true
+resume_release=${3:-}
+if [[ -n "$resume_release" ]]; then
+  [[ "$resume_release" =~ ^/home/ubuntu/apps/heart-islands-release\.[[:alnum:]]+$ ]] || exit 1
+  test -d "$resume_release"
+  release=$resume_release
+else
 release=$(mktemp -d /home/ubuntu/apps/heart-islands-release.XXXXXX)
 echo "Preparing release: $release"
 # Reuse unchanged original media, then fetch the smaller optimized variants below.
@@ -32,11 +38,15 @@ for file in "${files[@]}"; do
   curl --fail --silent --show-error --location --retry 2 --connect-timeout 15 --max-time 60 \
     "https://raw.githubusercontent.com/123Daved/my-work/$commit/$file" --create-dirs -o "$release/$file"
 done
+fi
 cd "$release"
 HEART_ISLANDS_COMMIT="$commit" node --input-type=module <<'JS'
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { dirname } from 'node:path';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+const run = promisify(execFile);
 const { entries } = JSON.parse(await readFile('src/assets/optimized/manifest.json', 'utf8'));
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
 let next = 0;
@@ -46,12 +56,12 @@ await Promise.all(Array.from({ length: 4 }, async () => {
     if (!/^optimized\/(?:audio\/|video\/)?[a-z0-9-]+\.(webp|m4a|mp4)$/.test(entry.output)) throw new Error('Invalid media path');
     const path = `src/assets/${entry.output}`;
     try { if (hash(await readFile(path)) === entry.outputSha256) continue; } catch {}
-    const response = await fetch(`https://raw.githubusercontent.com/123Daved/my-work/${process.env.HEART_ISLANDS_COMMIT}/${path}`, { signal: AbortSignal.timeout(120000) });
-    if (!response.ok) throw new Error(`Media download failed: ${path} ${response.status}`);
-    const bytes = Buffer.from(await response.arrayBuffer());
+    // curl also honors the server's existing proxy/network configuration.
+    const { stdout: bytes } = await run('curl', ['--fail', '--silent', '--show-error', '--location', '--retry', '3', '--connect-timeout', '10', '--max-time', '120', `https://raw.githubusercontent.com/123Daved/my-work/${process.env.HEART_ISLANDS_COMMIT}/${path}`], { encoding: 'buffer', maxBuffer: 8 * 1024 * 1024 });
     if (hash(bytes) !== entry.outputSha256) throw new Error(`Media checksum mismatch: ${path}`);
     await mkdir(dirname(path), { recursive: true });
     await writeFile(path, bytes);
+    console.log(`Verified ${path}`);
   }
 }));
 console.log('Optimized media verified.');
