@@ -26,8 +26,13 @@ trap rollback ERR
 # Only public build assets are copied; runtime secrets are outside this directory.
 # Keep old content-hashed assets so visitors with cached HTML are not interrupted.
 sudo install -d -m 755 /var/www/heart-islands-public/assets
+if test -f "$release/previous-release.conf"; then
+  previous=$(sed -n 's/^WorkingDirectory=//p' "$release/previous-release.conf")
+  if [[ "$previous" =~ ^/home/ubuntu/apps/heart-islands(-release\.[[:alnum:]]+)?$ ]] && test -d "$previous/dist/client/assets"; then
+    sudo cp -a "$previous/dist/client/assets/." /var/www/heart-islands-public/assets/
+  fi
+fi
 sudo cp -a "$release/dist/client/assets/." /var/www/heart-islands-public/assets/
-sudo cp -a "$release/dist/assets/." /var/www/heart-islands-public/assets/ 2>/dev/null || true
 sudo chmod -R a+rX /var/www/heart-islands-public/assets
 
 HEART_ISLANDS_NGINX_BACKUP="$backup" node --input-type=module <<'JS'
